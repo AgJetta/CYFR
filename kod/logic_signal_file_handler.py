@@ -22,11 +22,17 @@ class SignalFileHandler:
 
         with open(filename, 'wb') as f:
             metadata_json = json.dumps(metadata).encode('utf-8')
-            f.write(struct.pack('I', len(metadata_json))) 
+            f.write(struct.pack('I', len(metadata_json)))
             f.write(metadata_json)
 
-            for value in signal_data:
-                f.write(struct.pack('d', value))  # Double precision float
+            if is_complex:
+                # Write complex signal (pairs of floats: real and imaginary parts)
+                for value in signal_data:
+                    f.write(struct.pack('dd', value.real, value.imag))
+            else:
+                # Write real signal (single double precision float)
+                for value in signal_data:
+                    f.write(struct.pack('d', value))  # Double precision float
 
     @staticmethod
     def load_signal(filename):
@@ -38,13 +44,23 @@ class SignalFileHandler:
             metadata = json.loads(metadata_json)
 
             signal_data = []
-            while True:
-                value_bytes = f.read(8)  # 8 bytes for double
-                if not value_bytes:
-                    break
-                signal_data.append(struct.unpack('d', value_bytes)[0])
+            if metadata['is_complex']:
+                # Load complex signal (pairs of floats: real and imaginary parts)
+                while True:
+                    value_bytes = f.read(16)  # 16 bytes for two doubles (real + imaginary)
+                    if not value_bytes:
+                        break
+                    real, imag = struct.unpack('dd', value_bytes)
+                    signal_data.append(complex(real, imag))  # Create a complex number
+            else:
+                # Load real signal (single double precision float)
+                while True:
+                    value_bytes = f.read(8)  # 8 bytes for one double
+                    if not value_bytes:
+                        break
+                    signal_data.append(struct.unpack('d', value_bytes)[0])
 
-        return metadata, np.array(signal_data)
+            return metadata, np.array(signal_data)
 
     @staticmethod
     def text_representation(filename):
@@ -56,7 +72,10 @@ class SignalFileHandler:
 
         text_repr += "\nSignal Data:\n"
         for i, value in enumerate(signal_data):
-            text_repr += f"Sample {i}: {value}\n"
+            if isinstance(value, complex):
+                text_repr += f"Sample {i}: Real={value.real}, Imaginary={value.imag}\n"
+            else:
+                text_repr += f"Sample {i}: {value}\n"
 
         return text_repr
 
@@ -79,3 +98,4 @@ class SignalFileHandler:
             return signal1 / signal2_safe
         else:
             raise ValueError(f"Unsupported operation: {operation}")
+
