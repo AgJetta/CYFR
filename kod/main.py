@@ -7,8 +7,11 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QPushButton, QGridLayout, QTextEdit, QStackedWidget, 
                              QSpinBox, QFileDialog, QMessageBox)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
+from kod.GUI_signal_conversion_dialog import SignalConversionDialog
 from logic_signal_generator import SignalGenerator
 from logic_signal_file_handler import SignalFileHandler
+from logic_signal_conversion import *
 from GUI_signal_operation_dialog import SignalOperationDialog
 from strings import *
 
@@ -86,11 +89,16 @@ class DSPApplication(QMainWindow):
         
         text_repr_btn = QPushButton(TEXT_REPRESENTATION)
         text_repr_btn.clicked.connect(self.show_text_representation)
-        
+
+        conversion_btn = QPushButton(CONVERSION)
+        conversion_btn.clicked.connect(self.show_signal_conversions)
+
         layout.addWidget(save_btn)
         layout.addWidget(load_btn)
         layout.addWidget(operations_btn)
         layout.addWidget(text_repr_btn)
+        layout.addWidget(conversion_btn)
+
 
     def add_signal_type_selection(self, layout):
         signal_type_label = QLabel(SIGNAL_TYPE + ':')
@@ -435,7 +443,12 @@ class DSPApplication(QMainWindow):
     def show_signal_operations(self):
         dialog = SignalOperationDialog(self)
         dialog.exec_()
-    
+
+
+    def show_signal_conversions(self):
+        dialog = SignalConversionDialog(self)
+        dialog.exec_()
+
     def show_text_representation(self):
         if self.current_signal_data is None:
             QMessageBox.critical(self, "Error", NO_SIGNAL)
@@ -461,6 +474,8 @@ class DSPApplication(QMainWindow):
                 QMessageBox.information(self, "Success", TEXT_REPRESENTATION_SAVED)
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_SAVING_TEXT.format(str(e)))
+
+
 
     def generate_signal_by_type(self, signal_type, amplitude, start_time, duration):
         sampling_rate = self.common_parameter_inputs[SAMPLE_RATE].value()
@@ -532,4 +547,57 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
+
+    signal1 = np.array([complex(1, 2), complex(3, 4), complex(5, 6)])
+    signal2 = np.array([complex(7, 8), complex(9, 10), complex(11, 12)])
+
+    print("Signal 1 (complex):", signal1)
+    print("Signal 2 (complex):", signal2)
+
+    # Zapisz sygnał signal1 do pliku
+    filename = "test_signal.bin"
+    print(f"\nZapisuję sygnał do pliku: {filename}")
+    SignalFileHandler.save_signal(filename, signal1, is_complex=True)
+    print("Sygnał zapisany.")
+
+    # Załaduj sygnały z pliku
+    print("\nŁaduję sygnał z pliku...")
+    metadata, loaded_signal = SignalFileHandler.load_signal(filename)
+    print("Załadowany sygnał:", loaded_signal)
+
+    # Sprawdź, czy załadowane dane są takie same jak zapisane
+    print("\nPorównuję zapisany i załadowany sygnał...")
+    if np.allclose(loaded_signal, signal1):
+        print("Zapis i odczyt sygnału powiódł się.")
+    else:
+        print("Zapis i odczyt sygnału nie powiódł się.")
+
+    # Wykonaj operację na sygnałach (dodawanie)
+    print("\nWykonuję operację dodawania na sygnałach...")
+    result_signal = SignalFileHandler.perform_signal_operation(signal1, signal2, OPERATION_ADD)
+    print("Wynik operacji:", result_signal)
+
+    # Oczekiwany wynik
+    expected_result = np.array([complex(8, 10), complex(12, 14), complex(16, 18)])
+    print("Oczekiwany wynik:", expected_result)
+
+    # Sprawdź, czy wynik operacji jest zgodny z oczekiwanym
+    print("\nPorównuję wynik operacji z oczekiwanym wynikiem...")
+    if np.allclose(result_signal, expected_result):
+        print("Operacja dodawania sygnałów powiodła się.")
+    else:
+        print("Operacja dodawania sygnałów nie powiodła się.")
+
+    print("\nTest zakończony.")
+
+    # Downsampling sygnału
+    print("\nWykonuję downsampling sygnału...")
+    original_freq = 1000
+    target_freq = 500
+    downsampled_signal = sample(signal1, original_freq, target_freq)
+    print(f"Sygnał po downsamplingu ({original_freq} Hz -> {target_freq} Hz):", downsampled_signal)
+
+    print("\nTest zakończony.")
+
     main()
+

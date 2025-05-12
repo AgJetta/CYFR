@@ -96,4 +96,17 @@ PERFORM_OPERATION = 'Wykonaj operację'
 SAVE_RESULT = 'Zapisz wynik'
 ERROR_LOAD_BOTH = 'Proszę wczytać oba sygnały.'
 ERROR_SELECT_OPERATION = 'Proszę wybrać operację.'
-ERROR_OPERATION_FAILED = 'Operacja nie powiodła się: {}' 
+ERROR_OPERATION_FAILED = 'Operacja nie powiodła się: {}'
+
+
+# Signal Conversion Dialog
+PERFORM_CONVERSION = 'Wykonaj konwersje'
+
+#Others for now
+
+QUANTIZATION = 'Kwantyzacja'
+CONVERSION = 'Konwersja'
+SAMPLING = 'Probkowanie'
+EXTRAPOLATION = 'Ekstrapolacja'
+INTERPOLATION = 'Interpolacja'
+RECONSTRUCTION = 'Rekonstrukcja'

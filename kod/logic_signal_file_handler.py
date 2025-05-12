@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 import json
 import struct
-
+from kod.logic_signal_conversion import *
 from strings import *
 
 
@@ -98,4 +98,25 @@ class SignalFileHandler:
             return signal1 / signal2_safe
         else:
             raise ValueError(f"Unsupported operation: {operation}")
+
+    @staticmethod
+    def perform_signal_conversion(signal1, operation):
+        if operation == SAMPLING:
+            print("\nWykonuję downsampling sygnału...")
+            print(f"Sygnał przed: ", signal1)
+            original_freq = 1000
+            target_freq = 500
+            downsampled_signal = sample(signal1, original_freq, target_freq)
+            return downsampled_signal
+        elif operation == QUANTIZATION:
+            return signal1
+        elif operation == EXTRAPOLATION:
+            return signal1
+        elif operation == INTERPOLATION:
+            return signal1
+        elif operation == RECONSTRUCTION:
+            return signal1
+        else:
+            raise ValueError(f"Unsupported operation: {operation}")
+
 
