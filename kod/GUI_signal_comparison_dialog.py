@@ -1,3 +1,4 @@
+import numpy as np
 from logic_signal_file_handler import SignalFileHandler
 from strings import *
 from PyQt5.QtWidgets import QButtonGroup, QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTextEdit, QVBoxLayout
@@ -39,15 +40,6 @@ class SignalComparisonDialog(QDialog):
         self.signal2_params.setReadOnly(True)
         layout.addWidget(self.signal2_params)
 
-        operation_layout = QHBoxLayout()
-        self.operation_group = QButtonGroup()
-        operations = [OPERATION_ADD, OPERATION_SUBTRACT, OPERATION_MULTIPLY, OPERATION_DIVIDE]
-        for op in operations:
-            radio_btn = QRadioButton(op)
-            self.operation_group.addButton(radio_btn)
-            operation_layout.addWidget(radio_btn)
-        layout.addLayout(operation_layout)
-
         compare_btn = QPushButton(PERFORM_COMPARISON)
         compare_btn.clicked.connect(self.perform_comparison)
         layout.addWidget(compare_btn)
@@ -56,6 +48,8 @@ class SignalComparisonDialog(QDialog):
 
         self.signal1_data = None
         self.signal2_data = None
+        self.signal1_metadata = None
+        self.signal2_metadata = None
 
     def load_signal(self, path_input):
         filename, _ = QFileDialog.getOpenFileName(self, LOAD_SIGNAL, "", "Binary Files (*.bin)")
@@ -71,9 +65,11 @@ class SignalComparisonDialog(QDialog):
                 if path_input == self.signal1_path:
                     self.signal1_params.setText(params_text)
                     self.signal1_data = signal_data
+                    self.signal1_metadata = metadata
                 else:
                     self.signal2_params.setText(params_text)
                     self.signal2_data = signal_data
+                    self.signal2_metadata = metadata
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
@@ -83,14 +79,43 @@ class SignalComparisonDialog(QDialog):
             QMessageBox.critical(self, "Error", ERROR_LOAD_BOTH)
             return
 
-        operation = self.operation_group.checkedButton()
-        if operation is None:
-            QMessageBox.critical(self, "Error", ERROR_SELECT_OPERATION)
+        if len(self.signal1_data) != len(self.signal2_data):
+            QMessageBox.critical(self, "Error", ERROR_N_SAMPLES)
             return
+        
+        # Draw both signals
+        time_array1 = np.linspace(
+                self.signal1_metadata['start_time'], 
+                self.signal1_metadata['start_time'] + len(self.signal1_data)/self.signal1_metadata['sampling_freq'], 
+                len(self.signal1_data)
+            )
+        time_array2 = np.linspace(
+                self.signal2_metadata['start_time'], 
+                self.signal2_metadata['start_time'] + len(self.signal2_data)/self.signal2_metadata['sampling_freq'], 
+                len(self.signal2_data)
+            )
+        
+        drawing_shortcut = self.parent()
+        drawing_shortcut.signal_ax.clear()
+        drawing_shortcut.histogram_ax.clear()
+        # Plotting the signals
+        drawing_shortcut.signal_ax.set_facecolor('#f0f0f0')
+        drawing_shortcut.signal_ax.grid(True, color='white', linestyle='-', alpha=0.3)
+        
+        drawing_shortcut.signal_ax.axhline(y=0, color='purple', linestyle='--', alpha=0.3)
+        drawing_shortcut.signal_ax.axvline(x=0, color='purple', linestyle='--', alpha=0.3)
+        
+        drawing_shortcut.signal_ax.plot(time_array1, self.signal1_data, color='red', linewidth=0.8)
+        drawing_shortcut.signal_ax.plot(time_array2, self.signal2_data, color='blue', linewidth=0.8)
+        drawing_shortcut.signal_ax.set_title(f'{COMPARISON_TITLE}')
+        drawing_shortcut.signal_ax.set_xlabel(TIME_AXIS)
+        drawing_shortcut.signal_ax.set_ylabel(AMPLITUDE_AXIS)
+        
+        drawing_shortcut.histogram_ax.set_facecolor('#f0f0f0')
+        drawing_shortcut.histogram_ax.clear()
 
-        operation_text = operation.text()
-        try:
-            result = SignalFileHandler.perform_signal_operation(self.signal1_data, self.signal2_data, operation_text)
-            QMessageBox.information(self, "Success", f"Operation {operation_text} performed successfully.")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", ERROR_OPERATION_FAILED.format(str(e)))
+        drawing_shortcut.signal_figure.tight_layout()
+        drawing_shortcut.signal_canvas.draw()
+
+        self.close()
+

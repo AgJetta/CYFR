@@ -422,6 +422,7 @@ class DSPApplication(QMainWindow):
         self.histogram_ax.set_xlabel(AMPLITUDE_AXIS)
         self.histogram_ax.set_ylabel(FREQUENCY_AXIS)
 
+
     def generate_signal_from_file(self, filename):
         try:
             metadata, signal_data = SignalFileHandler.load_signal(filename)
