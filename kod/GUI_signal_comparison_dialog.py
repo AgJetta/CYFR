@@ -2,6 +2,7 @@ import numpy as np
 from logic_signal_file_handler import SignalFileHandler
 from strings import *
 from PyQt5.QtWidgets import QButtonGroup, QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTextEdit, QVBoxLayout
+from logic_comparisons import mean_squared_error, signal_to_noise_ratio, peak_signal_to_noise_ratio, max_difference
 
 
 class SignalComparisonDialog(QDialog):
@@ -117,5 +118,24 @@ class SignalComparisonDialog(QDialog):
         drawing_shortcut.signal_figure.tight_layout()
         drawing_shortcut.signal_canvas.draw()
 
+        self.calculate_comparisons()
+
         self.close()
 
+    def calculate_comparisons(self):
+        mse = mean_squared_error(self.signal1_data, self.signal2_data)
+        snr = signal_to_noise_ratio(self.signal1_data, self.signal2_data)
+        psnr = peak_signal_to_noise_ratio(self.signal1_data, self.signal2_data)
+        md = max_difference(self.signal1_data, self.signal2_data)
+
+        params = {
+            'MSE': mse,
+            'SNR': snr,
+            'PSNR': psnr,
+            'MD': md
+        }
+
+        param_text = '\n'.join([f'{k}: {v:.4f}' for k, v in params.items()])
+        self.parent().parameters_text.setText(param_text)
+        self.parent().parameters_text.setVisible(True)
+        self.parent().parameters_text.setReadOnly(True)
