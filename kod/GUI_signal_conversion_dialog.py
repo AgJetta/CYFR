@@ -2,7 +2,8 @@ import numpy as np
 
 from logic_signal_file_handler import SignalFileHandler
 from strings import *
-from PyQt5.QtWidgets import QButtonGroup, QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTextEdit, QVBoxLayout
+from PyQt5.QtWidgets import QButtonGroup, QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, \
+    QPushButton, QRadioButton, QTextEdit, QVBoxLayout, QFormLayout, QComboBox, QGroupBox
 
 
 class SignalConversionDialog(QDialog):
@@ -27,6 +28,18 @@ class SignalConversionDialog(QDialog):
         self.signal1_params.setReadOnly(True)
         layout.addWidget(self.signal1_params)
 
+        params_layout = QFormLayout()
+        self.sampling_rate_input = QLineEdit()
+        self.quantization_level_input = QLineEdit()
+        self.extrapolation_method_input = QComboBox()
+
+        params_layout.addRow("Sampling Rate (Hz):", self.sampling_rate_input)
+        params_layout.addRow("Sample Period:", self.quantization_level_input)
+        params_layout.addRow("Quantization Levels:", self.quantization_level_input)
+
+        params_group = QGroupBox("Signal Parameters")
+        params_group.setLayout(params_layout)
+        layout.addWidget(params_group)
 
         operation_layout = QHBoxLayout()
         self.operation_group = QButtonGroup()
@@ -48,31 +61,6 @@ class SignalConversionDialog(QDialog):
 
         self.signal1_data = None
 
-
-    def perform_downsampling(self):
-        # Example downsampling operation
-        original_freq = 1000  # Example original frequency
-        target_freq = 500  # Example target frequency
-        downsampled_signal = SignalFileHandler.sample(self.signal1_data, original_freq, target_freq)
-
-        save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
-        if save_filename:
-            SignalFileHandler.save_signal(save_filename, downsampled_signal)
-
-            self.parent().generate_signal_from_file(save_filename)
-            self.close()
-
-    def perform_quantization(self):
-        # Example quantization operation
-        num_levels = 8  # Example quantization levels
-        quantized_signal = self.quantize_signal(self.signal1_data, num_levels)
-
-        save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
-        if save_filename:
-            SignalFileHandler.save_signal(save_filename, quantized_signal)
-
-            self.parent().generate_signal_from_file(save_filename)
-            self.close()
 
 
     def load_signal(self, path_input):
@@ -123,43 +111,3 @@ class SignalConversionDialog(QDialog):
             QMessageBox.critical(self, "Error", ERROR_OPERATION_FAILED.format(str(e)))
 
 
-
-    def quantize_signal(self, signal, num_levels):
-        # Normalize the signal to range [0, 1] and apply quantization
-        min_val = np.min(signal)
-        max_val = np.max(signal)
-        normalized_signal = (signal - min_val) / (max_val - min_val)
-
-        # Quantize by scaling and rounding to nearest level
-        quantized_signal = np.round(normalized_signal * (num_levels - 1)) / (num_levels - 1)
-
-        # Rescale back to original range
-        quantized_signal = quantized_signal * (max_val - min_val) + min_val
-        return quantized_signal
-
-
-class SamplingDialog(QDialog):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Sampling Frequency Input")
-
-        self.layout = QVBoxLayout()
-
-        self.label = QLabel("Enter target sampling frequency (Hz):")
-        self.freq_input = QLineEdit()
-        self.freq_input.setPlaceholderText("e.g., 500")
-
-        self.ok_button = QPushButton("OK")
-        self.ok_button.clicked.connect(self.accept)
-
-        self.layout.addWidget(self.label)
-        self.layout.addWidget(self.freq_input)
-        self.layout.addWidget(self.ok_button)
-
-        self.setLayout(self.layout)
-
-    def get_frequency(self):
-        try:
-            return int(self.freq_input.text())
-        except ValueError:
-            return None
