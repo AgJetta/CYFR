@@ -111,3 +111,8 @@ RECONSTRUCTION = 'Rekonstrukcja'
 SAMPLE_FREQ = 'Częstotliwość próbkowania'
 QUANTIZATION_LVL = 'Poziom Kwantyzacji'
 
+SIGNAL_COMPARISON_DIALOG_TITLE = 'Porównanie sygnałów'
+SIGNAL_COMPARISON = 'Porównanie sygnałów'
+PERFORM_COMPARISON = 'Wykonaj porównanie'
+ERROR_N_SAMPLES = 'Liczba próbek sygnałów musi być taka sama.'
+COMPARISON_TITLE = 'Porównanie sygnałów'

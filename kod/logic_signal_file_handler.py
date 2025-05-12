@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 import json
 import struct
-from kod.logic_signal_conversion import *
+from logic_signal_conversion import *
 from strings import *
 
 

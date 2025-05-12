@@ -8,11 +8,12 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QSpinBox, QFileDialog, QMessageBox)
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-from kod.GUI_signal_conversion_dialog import SignalConversionDialog
+from GUI_signal_conversion_dialog import SignalConversionDialog
 from logic_signal_generator import SignalGenerator
 from logic_signal_file_handler import SignalFileHandler
 from logic_signal_conversion import *
 from GUI_signal_operation_dialog import SignalOperationDialog
+from GUI_signal_comparison_dialog import SignalComparisonDialog
 from strings import *
 
 class DSPApplication(QMainWindow):
@@ -93,11 +94,20 @@ class DSPApplication(QMainWindow):
         conversion_btn = QPushButton(CONVERSION)
         conversion_btn.clicked.connect(self.show_signal_conversions)
 
+        comparison_btn = QPushButton(SIGNAL_COMPARISON)
+        comparison_btn.clicked.connect(self.show_signal_comparison)
+
         layout.addWidget(save_btn)
         layout.addWidget(load_btn)
         layout.addWidget(operations_btn)
         layout.addWidget(text_repr_btn)
         layout.addWidget(conversion_btn)
+        layout.addWidget(comparison_btn)
+
+    def add_comparison_button(self, layout):
+        comparison_btn = QPushButton(SIGNAL_COMPARISON)
+        comparison_btn.clicked.connect(self.show_signal_comparison)
+        layout.addWidget(comparison_btn)
 
 
     def add_signal_type_selection(self, layout):
@@ -412,13 +422,20 @@ class DSPApplication(QMainWindow):
         self.histogram_ax.set_xlabel(AMPLITUDE_AXIS)
         self.histogram_ax.set_ylabel(FREQUENCY_AXIS)
 
+
     def generate_signal_from_file(self, filename):
         try:
             metadata, signal_data = SignalFileHandler.load_signal(filename)
             
             self.current_signal_data = signal_data
             self.current_signal_metadata = metadata
-            
+
+            # Update the GUI with loaded signal metadata
+            if SAMPLE_RATE in self.common_parameter_inputs:
+                self.common_parameter_inputs[SAMPLE_RATE].setValue(metadata['sampling_freq'])
+            if START_TIME in self.common_parameter_inputs:
+                self.common_parameter_inputs[START_TIME].setValue(metadata['start_time'])
+
             self.signal_ax.clear()
             self.histogram_ax.clear()
             
@@ -428,7 +445,7 @@ class DSPApplication(QMainWindow):
                 len(signal_data)
             )
             
-            self.plot_signal_and_histogram(time_array, signal_data, LOADED_SIGNAL, SAMPLE_AXIS)
+            self.plot_signal_and_histogram(time_array, signal_data, LOADED_SIGNAL, TIME_AXIS)
             
             params = SignalGenerator.calculate_signal_parameters(signal_data)
             param_text = '\n'.join([f'{k}: {v:.4f}' for k, v in params.items()])
@@ -449,6 +466,10 @@ class DSPApplication(QMainWindow):
         dialog = SignalConversionDialog(self)
         dialog.exec_()
 
+    def show_signal_comparison(self):
+        dialog = SignalComparisonDialog(self)
+        dialog.exec_()
+
     def show_text_representation(self):
         if self.current_signal_data is None:
             QMessageBox.critical(self, "Error", NO_SIGNAL)
@@ -462,7 +483,7 @@ class DSPApplication(QMainWindow):
                     temp_filename, 
                     self.current_signal_data,
                     start_time=self.common_parameter_inputs[START_TIME].value(),
-                    sampling_freq=1.0
+                    sampling_freq=self.common_parameter_inputs[SAMPLE_RATE].value()
                 )
                 
                 text_repr = SignalFileHandler.text_representation(temp_filename)
@@ -529,7 +550,7 @@ class DSPApplication(QMainWindow):
                     filename, 
                     self.current_signal_data,
                     start_time=self.common_parameter_inputs[START_TIME].value(),
-                    sampling_freq=1.0  # default sampling frequency
+                    sampling_freq=self.common_parameter_inputs[SAMPLE_RATE].value()
                 )
                 QMessageBox.information(self, "Success", SIGNAL_SAVED)
             except Exception as e:
