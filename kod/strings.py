@@ -102,11 +102,12 @@ ERROR_OPERATION_FAILED = 'Operacja nie powiodła się: {}'
 # Signal Conversion Dialog
 PERFORM_CONVERSION = 'Wykonaj konwersje'
 
-#Others for now
-
 QUANTIZATION = 'Kwantyzacja'
 CONVERSION = 'Konwersja'
 SAMPLING = 'Probkowanie'
 EXTRAPOLATION = 'Ekstrapolacja'
 INTERPOLATION = 'Interpolacja'
 RECONSTRUCTION = 'Rekonstrukcja'
+SAMPLE_FREQ = 'Częstotliwość próbkowania'
+QUANTIZATION_LVL = 'Poziom Kwantyzacji'
+

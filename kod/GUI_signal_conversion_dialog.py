@@ -31,13 +31,14 @@ class SignalConversionDialog(QDialog):
         params_layout = QFormLayout()
         self.sampling_rate_input = QLineEdit()
         self.quantization_level_input = QLineEdit()
-        self.extrapolation_method_input = QComboBox()
+        self.sample_rate_period = QLineEdit()
 
-        params_layout.addRow("Sampling Rate (Hz):", self.sampling_rate_input)
-        params_layout.addRow("Sample Period:", self.quantization_level_input)
-        params_layout.addRow("Quantization Levels:", self.quantization_level_input)
+        params_layout.addRow(SAMPLE_FREQ, self.sampling_rate_input)
+        params_layout.addRow(PERIOD, self.sample_rate_period)
+        params_layout.addRow(QUANTIZATION_LVL, self.quantization_level_input)
 
-        params_group = QGroupBox("Signal Parameters")
+
+        params_group = QGroupBox(SIGNAL_PARAMETERS)
         params_group.setLayout(params_layout)
         layout.addWidget(params_group)
 
