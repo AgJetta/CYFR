@@ -106,11 +106,16 @@ class SignalComparisonDialog(QDialog):
         drawing_shortcut.signal_ax.axhline(y=0, color='purple', linestyle='--', alpha=0.3)
         drawing_shortcut.signal_ax.axvline(x=0, color='purple', linestyle='--', alpha=0.3)
         
-        drawing_shortcut.signal_ax.plot(time_array1, self.signal1_data, color='red', linewidth=0.8)
-        drawing_shortcut.signal_ax.plot(time_array2, self.signal2_data, color='blue', linewidth=0.8)
+        signal1_line, = drawing_shortcut.signal_ax.plot(time_array1, self.signal1_data, color='red', linewidth=0.8)
+        signal2_line, = drawing_shortcut.signal_ax.plot(time_array2, self.signal2_data, color='blue', linewidth=0.8)
         drawing_shortcut.signal_ax.set_title(f'{COMPARISON_TITLE}')
         drawing_shortcut.signal_ax.set_xlabel(TIME_AXIS)
         drawing_shortcut.signal_ax.set_ylabel(AMPLITUDE_AXIS)
+
+        # legend, make colors match the signal colors
+        legend_name_1 = self.signal1_path.text().split('/')[-1]
+        legend_name_2 = self.signal2_path.text().split('/')[-1]
+        drawing_shortcut.signal_ax.legend([signal1_line, signal2_line], [legend_name_1, legend_name_2], loc='upper right', fontsize=8, frameon=False, facecolor='white', edgecolor='black', shadow=True)
         
         drawing_shortcut.histogram_ax.set_facecolor('#f0f0f0')
         drawing_shortcut.histogram_ax.clear()
