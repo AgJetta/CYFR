@@ -569,56 +569,5 @@ def main():
 
 if __name__ == '__main__':
 
-    signal1 = np.array([complex(1, 2), complex(3, 4), complex(5, 6)])
-    signal2 = np.array([complex(7, 8), complex(9, 10), complex(11, 12)])
-
-    print("Signal 1 (complex):", signal1)
-    print("Signal 2 (complex):", signal2)
-
-    # Zapisz sygnał signal1 do pliku
-    filename = "test_signal.bin"
-    print(f"\nZapisuję sygnał do pliku: {filename}")
-    SignalFileHandler.save_signal(filename, signal1, is_complex=True)
-    print("Sygnał zapisany.")
-
-    # Załaduj sygnały z pliku
-    print("\nŁaduję sygnał z pliku...")
-    metadata, loaded_signal = SignalFileHandler.load_signal(filename)
-    print("Załadowany sygnał:", loaded_signal)
-
-    # Sprawdź, czy załadowane dane są takie same jak zapisane
-    print("\nPorównuję zapisany i załadowany sygnał...")
-    if np.allclose(loaded_signal, signal1):
-        print("Zapis i odczyt sygnału powiódł się.")
-    else:
-        print("Zapis i odczyt sygnału nie powiódł się.")
-
-    # Wykonaj operację na sygnałach (dodawanie)
-    print("\nWykonuję operację dodawania na sygnałach...")
-    result_signal = SignalFileHandler.perform_signal_operation(signal1, signal2, OPERATION_ADD)
-    print("Wynik operacji:", result_signal)
-
-    # Oczekiwany wynik
-    expected_result = np.array([complex(8, 10), complex(12, 14), complex(16, 18)])
-    print("Oczekiwany wynik:", expected_result)
-
-    # Sprawdź, czy wynik operacji jest zgodny z oczekiwanym
-    print("\nPorównuję wynik operacji z oczekiwanym wynikiem...")
-    if np.allclose(result_signal, expected_result):
-        print("Operacja dodawania sygnałów powiodła się.")
-    else:
-        print("Operacja dodawania sygnałów nie powiodła się.")
-
-    print("\nTest zakończony.")
-
-    # Downsampling sygnału
-    print("\nWykonuję downsampling sygnału...")
-    original_freq = 1000
-    target_freq = 500
-    downsampled_signal = sample(signal1, original_freq, target_freq)
-    print(f"Sygnał po downsamplingu ({original_freq} Hz -> {target_freq} Hz):", downsampled_signal)
-
-    print("\nTest zakończony.")
-
     main()
 

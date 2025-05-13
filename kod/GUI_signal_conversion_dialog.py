@@ -77,10 +77,32 @@ class SignalConversionDialog(QDialog):
 
                 if path_input == self.signal1_path:
                     self.signal1_params.setText(params_text)
+                    # print(f"PARAMETRY: ", params_text)
                     self.signal1_data = signal_data
-
+                    # print(f"SIGNAL: ", signal_data)
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
+
+    def parse_metadata_text(self, text):
+        lines = text.strip().split('\n')
+        metadata = {}
+        for line in lines[1:]:  # Skip the METADATA_LABEL line
+            if ':' in line:
+                key, value = line.split(':', 1)
+                key = key.strip()
+                value = value.strip()
+                # Try converting to appropriate data type
+                if value.lower() == 'true':
+                    value = True
+                elif value.lower() == 'false':
+                    value = False
+                else:
+                    try:
+                        value = float(value) if '.' in value else int(value)
+                    except ValueError:
+                        pass
+                metadata[key] = value
+        return metadata
 
 
     def perform_conversion(self):
@@ -96,9 +118,12 @@ class SignalConversionDialog(QDialog):
         operation = selected_op.text()
 
         try:
+            metadata_text = self.signal1_params.toPlainText()
+            metadata_dict = self.parse_metadata_text(metadata_text)
+
+            print(self.signal1_data, metadata_text, operation)
             result_signal = SignalFileHandler.perform_signal_conversion(
-                self.signal1_data,
-                operation
+                self.signal1_data, metadata_dict, operation
             )
 
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
