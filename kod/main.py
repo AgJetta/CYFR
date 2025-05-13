@@ -169,7 +169,7 @@ class DSPApplication(QMainWindow):
         periodic_params_widget = QWidget()
         periodic_params_layout = QGridLayout()
         
-        periodic_parameters = [(PERIOD, 1.0, 0.1, 10.0)]
+        periodic_parameters = [(PERIOD, 1.0, 0.00001, 10.0)]
         
         self.periodic_parameter_inputs = {}
         for i, (name, default, min_val, max_val) in enumerate(periodic_parameters):
@@ -177,6 +177,8 @@ class DSPApplication(QMainWindow):
             spinbox = QDoubleSpinBox()
             spinbox.setRange(min_val, max_val)
             spinbox.setValue(default)
+            spinbox.setDecimals(7)
+            spinbox.setSingleStep(0.001)
             periodic_params_layout.addWidget(label, i, 0)
             periodic_params_layout.addWidget(spinbox, i, 1)
             self.periodic_parameter_inputs[name] = spinbox
