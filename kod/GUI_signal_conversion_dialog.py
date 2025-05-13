@@ -31,10 +31,8 @@ class SignalConversionDialog(QDialog):
         params_layout = QFormLayout()
         self.sampling_rate_input = QLineEdit()
         self.quantization_level_input = QLineEdit()
-        self.sample_rate_period = QLineEdit()
 
         params_layout.addRow(SAMPLE_FREQ, self.sampling_rate_input)
-        params_layout.addRow(PERIOD, self.sample_rate_period)
         params_layout.addRow(QUANTIZATION_LVL, self.quantization_level_input)
 
 
@@ -62,8 +60,6 @@ class SignalConversionDialog(QDialog):
 
         self.signal1_data = None
 
-
-
     def load_signal(self, path_input):
         filename, _ = QFileDialog.getOpenFileName(self, LOAD_SIGNAL, "", "Binary Files (*.bin)")
         if filename:
@@ -77,8 +73,9 @@ class SignalConversionDialog(QDialog):
 
                 if path_input == self.signal1_path:
                     self.signal1_params.setText(params_text)
-                    # print(f"PARAMETRY: ", params_text)
                     self.signal1_data = signal_data
+                    # For debugging purposes, you can print out the signal data
+                    # print(f"PARAMETRY: ", params_text)
                     # print(f"SIGNAL: ", signal_data)
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
@@ -104,7 +101,6 @@ class SignalConversionDialog(QDialog):
                 metadata[key] = value
         return metadata
 
-
     def perform_conversion(self):
         if self.signal1_data is None:
             QMessageBox.critical(self, "Error", ERROR_LOAD_BOTH)
@@ -121,19 +117,17 @@ class SignalConversionDialog(QDialog):
             metadata_text = self.signal1_params.toPlainText()
             metadata_dict = self.parse_metadata_text(metadata_text)
 
-            print(self.signal1_data, metadata_text, operation)
-            result_signal = SignalFileHandler.perform_signal_conversion(
+
+            result_signal, result_metadata = SignalFileHandler.perform_signal_conversion(
                 self.signal1_data, metadata_dict, operation
             )
 
+
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
             if save_filename:
-                SignalFileHandler.save_signal(save_filename, result_signal)
-
+                SignalFileHandler.save_signal(save_filename, result_signal, metadata=result_metadata)
                 self.parent().generate_signal_from_file(save_filename)
                 self.close()
 
         except Exception as e:
             QMessageBox.critical(self, "Error", ERROR_OPERATION_FAILED.format(str(e)))
-
-

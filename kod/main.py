@@ -422,11 +422,11 @@ class DSPApplication(QMainWindow):
         self.histogram_ax.set_xlabel(AMPLITUDE_AXIS)
         self.histogram_ax.set_ylabel(FREQUENCY_AXIS)
 
-
     def generate_signal_from_file(self, filename):
         try:
+            # Load signal and metadata
             metadata, signal_data = SignalFileHandler.load_signal(filename)
-            
+
             self.current_signal_data = signal_data
             self.current_signal_metadata = metadata
 
@@ -435,28 +435,36 @@ class DSPApplication(QMainWindow):
                 self.common_parameter_inputs[SAMPLE_RATE].setValue(metadata['sampling_freq'])
             if START_TIME in self.common_parameter_inputs:
                 self.common_parameter_inputs[START_TIME].setValue(metadata['start_time'])
+            if DURATION in self.common_parameter_inputs:
+                self.common_parameter_inputs[DURATION].setValue(metadata['duration'])
 
+            # Clear previous plot
             self.signal_ax.clear()
             self.histogram_ax.clear()
-            
+
+            # Use metadata 'duration' directly to calculate the time array
             time_array = np.linspace(
-                metadata['start_time'], 
-                metadata['start_time'] + len(signal_data)/metadata['sampling_freq'], 
+                metadata['start_time'],
+                metadata['start_time'] + metadata['duration'],  # Use 'duration' from metadata
                 len(signal_data)
             )
-            
+            print(metadata);
+            # Plot the signal and histogram
             self.plot_signal_and_histogram(time_array, signal_data, LOADED_SIGNAL, TIME_AXIS)
-            
+
+            # Calculate and display signal parameters
             params = SignalGenerator.calculate_signal_parameters(signal_data)
             param_text = '\n'.join([f'{k}: {v:.4f}' for k, v in params.items()])
             self.parameters_text.setText(param_text)
-            
+
+            # Adjust layout and redraw the canvas
             self.signal_figure.tight_layout()
             self.signal_canvas.draw()
-        
+
         except Exception as e:
             QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
-    
+
+
     def show_signal_operations(self):
         dialog = SignalOperationDialog(self)
         dialog.exec_()

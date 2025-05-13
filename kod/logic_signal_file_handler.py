@@ -1,4 +1,3 @@
-import numpy as np
 from PyQt5.QtWidgets import QMessageBox
 
 import json
@@ -9,40 +8,58 @@ from strings import *
 
 class SignalFileHandler:
     @staticmethod
-    def save_signal(filename, signal_data, start_time=0, sampling_freq=1, is_complex=False):
-        import struct
-        import json
+    def save_signal(filename, signal_data, metadata=None, start_time=0, sampling_freq=1, is_complex=False,
+                    duration=None):
+        # If metadata is provided, use its values and override the arguments
+        if metadata is not None:
+            start_time = metadata.get('start_time', start_time)
+            sampling_freq = metadata.get('sampling_freq', sampling_freq)
+            is_complex = metadata.get('is_complex', is_complex)
+            num_samples = metadata.get('num_samples', len(signal_data))
+            duration = metadata.get('duration',
+                                    duration if duration is not None else len(signal_data) / sampling_freq)
+        else:
+            num_samples = len(signal_data)
+            # Calculate duration if not provided
+            if duration is None:
+                duration = num_samples / sampling_freq
 
+        # Build metadata
         metadata = {
             'start_time': start_time,
             'sampling_freq': sampling_freq,
             'is_complex': is_complex,
-            'num_samples': len(signal_data)
+            'num_samples': num_samples,
+            'duration': duration
         }
 
+        # Write to file
         with open(filename, 'wb') as f:
             metadata_json = json.dumps(metadata).encode('utf-8')
             f.write(struct.pack('I', len(metadata_json)))
             f.write(metadata_json)
 
             if is_complex:
-                # Write complex signal (pairs of floats: real and imaginary parts)
+                # Write complex signal (real and imaginary parts)
                 for value in signal_data:
                     f.write(struct.pack('dd', value.real, value.imag))
             else:
-                # Write real signal (single double precision float)
+                # Write real signal
                 for value in signal_data:
                     f.write(struct.pack('d', value))  # Double precision float
 
+
     @staticmethod
     def load_signal(filename):
-
         with open(filename, 'rb') as f:
+            # Read and unpack the metadata length
             metadata_len = struct.unpack('I', f.read(4))[0]
 
+            # Read and decode metadata
             metadata_json = f.read(metadata_len).decode('utf-8')
             metadata = json.loads(metadata_json)
 
+            # Load the signal data based on whether it is complex or real
             signal_data = []
             if metadata['is_complex']:
                 # Load complex signal (pairs of floats: real and imaginary parts)
@@ -60,6 +77,7 @@ class SignalFileHandler:
                         break
                     signal_data.append(struct.unpack('d', value_bytes)[0])
 
+            # Return both metadata (including duration) and signal data
             return metadata, np.array(signal_data)
 
     @staticmethod
@@ -100,23 +118,19 @@ class SignalFileHandler:
             raise ValueError(f"Unsupported operation: {operation}")
 
     @staticmethod
-    def perform_signal_conversion(signal1, operation):
+    def perform_signal_conversion(signal, metadata, operation, frequency = None, quantization_lvl = None):
         if operation == SAMPLING:
-            print("\nWykonuję downsampling sygnału...")
-            print(f"Sygnał przed: ", signal1)
-            original_freq = 1000
-            target_freq = 500
-            downsampled_signal = sample(signal1, original_freq, target_freq)
-            return downsampled_signal
+            downsampled_signal, downsampled_metadata = sample(signal, metadata, frequency)
+            return downsampled_signal, downsampled_metadata
         elif operation == QUANTIZATION:
-            return signal1
+            quantized_signal, quantized_metadata = quantize(signal, metadata, quantization_lvl)
+            return quantized_signal, quantized_metadata
         elif operation == EXTRAPOLATION:
-            return signal1
+            return extrapolate(signal, metadata, 2000)  # Extrapolation logic remains the same
         elif operation == INTERPOLATION:
-            return signal1
+            return interpolate(signal, metadata, 2000)  # Implement the first-order interpolation
         elif operation == RECONSTRUCTION:
-            return signal1
+            return reconstruct(signal, metadata, 2000)  # Implement sinc-based reconstruction
+
         else:
             raise ValueError(f"Unsupported operation: {operation}")
-
-
