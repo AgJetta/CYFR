@@ -126,11 +126,11 @@ class SignalFileHandler:
             quantized_signal, quantized_metadata = quantize(signal, metadata, quantization_lvl)
             return quantized_signal, quantized_metadata
         elif operation == EXTRAPOLATION:
-            return extrapolate(signal, metadata, 2000)  # Extrapolation logic remains the same
+            return extrapolate(signal, metadata, frequency)  # Extrapolation logic remains the same
         elif operation == INTERPOLATION:
-            return interpolate(signal, metadata, 2000)  # Implement the first-order interpolation
+            return interpolate(signal, metadata, frequency)  # Implement the first-order interpolation
         elif operation == RECONSTRUCTION:
-            return reconstruct(signal, metadata, 2000)  # Implement sinc-based reconstruction
+            return reconstruct(signal, metadata, frequency)  # Implement sinc-based reconstruction
 
         else:
             raise ValueError(f"Unsupported operation: {operation}")

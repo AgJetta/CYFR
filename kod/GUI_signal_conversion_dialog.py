@@ -117,11 +117,19 @@ class SignalConversionDialog(QDialog):
             metadata_text = self.signal1_params.toPlainText()
             metadata_dict = self.parse_metadata_text(metadata_text)
 
+            # Read frequency and quantization level from inputs
+            frequency = self.sampling_rate_input.text().strip()
+            quantization_lvl = self.quantization_level_input.text().strip()
 
+            # Convert to appropriate types or set to None if empty
+            frequency = int(frequency) if frequency else None
+            quantization_lvl = int(quantization_lvl) if quantization_lvl else None
+
+            # Pass the inputs to the conversion function
             result_signal, result_metadata = SignalFileHandler.perform_signal_conversion(
-                self.signal1_data, metadata_dict, operation
+                self.signal1_data, metadata_dict, operation,
+                frequency=frequency, quantization_lvl=quantization_lvl
             )
-
 
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
             if save_filename:

@@ -79,10 +79,10 @@ class SignalComparisonDialog(QDialog):
         if self.signal1_data is None or self.signal2_data is None:
             QMessageBox.critical(self, "Error", ERROR_LOAD_BOTH)
             return
-
-        if len(self.signal1_data) != len(self.signal2_data):
-            QMessageBox.critical(self, "Error", ERROR_N_SAMPLES)
-            return
+        #
+        # if len(self.signal1_data) != len(self.signal2_data):
+        #     QMessageBox.critical(self, "Error", ERROR_N_SAMPLES)
+        #     return
         
         # Draw both signals
         time_array1 = np.linspace(
