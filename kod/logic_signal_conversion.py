@@ -55,43 +55,36 @@ def quantize(signal, metadata, num_levels=16):
     return quantized_signal, quantized_metadata
 
 def extrapolate(signal, metadata, target_frequency):
-    # Extrapolate the signal using frequency
-    signal_length = len(signal)
-    signal_freq = metadata['sampling_freq']
-
-    # Calculate how many new samples we need based on the target frequency
-    num_extra_samples = int(signal_length * (target_frequency / signal_freq)) - signal_length
-    if num_extra_samples > 0:
-        # Repeat the last sample for extrapolation
-        last_sample = signal[-1]
-        extrapolated_signal = list(signal) + [last_sample] * num_extra_samples
-    else:
-        extrapolated_signal = signal
-
-    # Update metadata with frequency information
+    # Calculate time arrays
+    original_fs = metadata['sampling_freq']
+    duration = len(signal) / original_fs
+    
+    sample_times = np.linspace(0, duration, len(signal), endpoint=False)
+    target_times = np.linspace(0, duration, int(duration * target_frequency), endpoint=False)
+    
+    # Use array indexing for efficiency
+    indices = np.searchsorted(sample_times, target_times, side='right') - 1
+    indices = np.clip(indices, 0, len(signal) - 1)
+    
+    extrapolated_signal = signal[indices]
     extrapolated_metadata = metadata.copy()
     extrapolated_metadata['sampling_freq'] = target_frequency
     extrapolated_metadata['num_samples'] = len(extrapolated_signal)
-
     return extrapolated_signal, extrapolated_metadata
 
 def interpolate(signal, metadata, target_frequency):
-    # Interpolate the signal to the target frequency (linear interpolation)
-    signal_length = len(signal)
-    signal_freq = metadata['sampling_freq']
-
-    # Calculate the target number of samples for the given frequency
-    target_samples = int(signal_length * (target_frequency / signal_freq))
-
-    x = np.arange(signal_length)
-    x_new = np.linspace(0, signal_length - 1, target_samples)
-    interpolated_signal = np.interp(x_new, x, signal)
-
-    # Update metadata with frequency information
+    # Calculate time arrays
+    original_fs = metadata['sampling_freq']
+    duration = len(signal) / original_fs
+    
+    sample_times = np.linspace(0, duration, len(signal), endpoint=False)
+    target_times = np.linspace(0, duration, int(duration * target_frequency), endpoint=False)
+    
+    interpolated_signal = np.interp(target_times, sample_times, signal)
     interpolated_metadata = metadata.copy()
     interpolated_metadata['sampling_freq'] = target_frequency
     interpolated_metadata['num_samples'] = len(interpolated_signal)
-
+    
     return interpolated_signal, interpolated_metadata
 
 def reconstruct(signal, metadata, target_frequency, sampling_rate=1):
