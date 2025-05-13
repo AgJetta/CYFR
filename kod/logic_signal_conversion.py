@@ -87,27 +87,22 @@ def interpolate(signal, metadata, target_frequency):
     
     return interpolated_signal, interpolated_metadata
 
-def reconstruct(signal, metadata, target_frequency, sampling_rate=1):
-    # Sinc-based reconstruction of the signal
-    signal_length = len(signal)
-    signal_freq = metadata['sampling_freq']
-
-    # Calculate the target number of samples for the given frequency
-    target_samples = int(signal_length * (target_frequency / signal_freq))
-    t = np.arange(0, signal_length * sampling_rate, sampling_rate)
-    t_new = np.linspace(0, signal_length - 1, target_samples)
-
-    reconstructed_signal = np.zeros_like(t_new)
-
-    for i, t_i in enumerate(t_new):
-        # Sum over all signal points
-        for j, signal_value in enumerate(signal):
-            sinc_arg = (t_i - t[j]) / sampling_rate
-            reconstructed_signal[i] += signal_value * np.sinc(sinc_arg)
-
-    # Update metadata with frequency information
+def reconstruct(signal, metadata, target_frequency):
+    original_fs = metadata['sampling_freq']
+    duration = len(signal) / original_fs
+    
+    sample_times = np.linspace(0, duration, len(signal), endpoint=False)
+    target_times = np.linspace(0, duration, int(duration * target_frequency), endpoint=False)
+    
+    reconstructed = np.zeros(len(target_times))
+    T = 1/original_fs  # Sample period
+    
+    for n in range(len(signal)):
+        # Calculate sinc contribution for each sample
+        sinc_values = np.sinc((target_times - sample_times[n]) / T)
+        reconstructed += signal[n] * sinc_values
+        
     reconstructed_metadata = metadata.copy()
     reconstructed_metadata['sampling_freq'] = target_frequency
-    reconstructed_metadata['num_samples'] = len(reconstructed_signal)
-
-    return reconstructed_signal, reconstructed_metadata
+    reconstructed_metadata['num_samples'] = len(reconstructed)
+    return reconstructed, reconstructed_metadata
