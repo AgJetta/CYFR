@@ -146,8 +146,8 @@ class DSPApplication(QMainWindow):
         common_parameters = [
             (AMPLITUDE, 1.0, 0.0, 100.0),
             (START_TIME, 0.0, -100.0, 100.0),
-            (DURATION, 5.0, 0.1, 100.0),
-            (SAMPLE_RATE, 1000, 2, 10000)
+            (DURATION, 5.0, 0.01, 100.0),
+            (SAMPLE_RATE, 1000, 2, 100000)
         ]
         
         self.common_parameter_inputs = {}
@@ -159,8 +159,8 @@ class DSPApplication(QMainWindow):
                 spinbox.setSingleStep(1)
             else:
                 spinbox = QDoubleSpinBox()
-                spinbox.setDecimals(3)
-                spinbox.setSingleStep(0.1)
+                spinbox.setDecimals(6)
+                spinbox.setSingleStep(0.001)
             spinbox.setRange(min_val, max_val)
             spinbox.setValue(default)
             spinbox.setButtonSymbols(QDoubleSpinBox.NoButtons)
@@ -175,7 +175,7 @@ class DSPApplication(QMainWindow):
         periodic_params_widget = QWidget()
         periodic_params_layout = QGridLayout()
         
-        periodic_parameters = [(PERIOD, 1.0, 0.00001, 10.0)]
+        periodic_parameters = [(PERIOD, 1.0, -100000, 100000.0)]
         
         self.periodic_parameter_inputs = {}
         for i, (name, default, min_val, max_val) in enumerate(periodic_parameters):
