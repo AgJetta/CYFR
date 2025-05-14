@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from GUI_signal_conversion_dialog import SignalConversionDialog
+from kod.GUI_singal_convolution_diaog import SignalConvolutionDialog
 from logic_signal_generator import SignalGenerator
 from logic_signal_file_handler import SignalFileHandler
 from logic_signal_conversion import *
@@ -97,12 +98,17 @@ class DSPApplication(QMainWindow):
         comparison_btn = QPushButton(SIGNAL_COMPARISON)
         comparison_btn.clicked.connect(self.show_signal_comparison)
 
+        convolution_btn = QPushButton(CONVOLUTION)
+        convolution_btn.clicked.connect(self.show_signal_convolution)
+
+
         layout.addWidget(save_btn)
         layout.addWidget(load_btn)
         layout.addWidget(operations_btn)
         layout.addWidget(text_repr_btn)
         layout.addWidget(conversion_btn)
         layout.addWidget(comparison_btn)
+        layout.addWidget(convolution_btn)
 
     def add_comparison_button(self, layout):
         comparison_btn = QPushButton(SIGNAL_COMPARISON)
@@ -480,6 +486,10 @@ class DSPApplication(QMainWindow):
         dialog = SignalComparisonDialog(self)
         dialog.exec_()
 
+    def show_signal_convolution(self):
+        dialog = SignalConvolutionDialog(self)
+        dialog.exec_()
+
     def show_text_representation(self):
         if self.current_signal_data is None:
             QMessageBox.critical(self, "Error", NO_SIGNAL)
@@ -578,6 +588,8 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
+    import numpy as np
+    import matplotlib.pyplot as plt
+
 
     main()
-

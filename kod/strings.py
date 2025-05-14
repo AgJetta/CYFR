@@ -116,3 +116,8 @@ SIGNAL_COMPARISON = 'Porównanie sygnałów'
 PERFORM_COMPARISON = 'Wykonaj porównanie'
 ERROR_N_SAMPLES = 'Liczba próbek sygnałów musi być taka sama.'
 COMPARISON_TITLE = 'Porównanie sygnałów'
+
+#SINGAL CONVOLUTION
+CONVOLUTION = 'Splot'
+SIGNAL_CONVOLUTION_DIALOG_TITLE = 'Splot sygnałów'
+PERFORM_CONVOLUTION = 'Wykonaj splot'
