@@ -503,7 +503,8 @@ class DSPApplication(QMainWindow):
                     temp_filename, 
                     self.current_signal_data,
                     start_time=self.common_parameter_inputs[START_TIME].value(),
-                    sampling_freq=self.common_parameter_inputs[SAMPLE_RATE].value()
+                    sampling_freq=self.common_parameter_inputs[SAMPLE_RATE].value(),
+                    duration=self.common_parameter_inputs[DURATION].value()
                 )
                 
                 text_repr = SignalFileHandler.text_representation(temp_filename)
@@ -570,7 +571,8 @@ class DSPApplication(QMainWindow):
                     filename, 
                     self.current_signal_data,
                     start_time=self.common_parameter_inputs[START_TIME].value(),
-                    sampling_freq=self.common_parameter_inputs[SAMPLE_RATE].value()
+                    sampling_freq=self.common_parameter_inputs[SAMPLE_RATE].value(),
+                    duration = self.common_parameter_inputs[DURATION].value()
                 )
                 QMessageBox.information(self, "Success", SIGNAL_SAVED)
             except Exception as e:
