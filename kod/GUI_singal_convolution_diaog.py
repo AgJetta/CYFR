@@ -75,57 +75,29 @@ class SignalConvolutionDialog(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
-    #This is copy of comparison func, for now
     def perform_convolution(self):
         if self.signal1_data is None or self.signal2_data is None:
             QMessageBox.critical(self, "Error", ERROR_LOAD_BOTH)
-            return
-        #
-        # if len(self.signal1_data) != len(self.signal2_data):
-        #     QMessageBox.critical(self, "Error", ERROR_N_SAMPLES)
-        #     return
 
-        # Draw both signals
-        time_array1 = np.linspace(
-            self.signal1_metadata['start_time'],
-            self.signal1_metadata['start_time'] + len(self.signal1_data) / self.signal1_metadata['sampling_freq'],
-            len(self.signal1_data)
-        )
-        time_array2 = np.linspace(
-            self.signal2_metadata['start_time'],
-            self.signal2_metadata['start_time'] + len(self.signal2_data) / self.signal2_metadata['sampling_freq'],
-            len(self.signal2_data)
-        )
+        print("SYGNAL 1")
+        print(self.signal1_metadata)
+        print("SYGNAL 2")
+        print(self.signal2_metadata)
 
-        drawing_shortcut = self.parent()
-        drawing_shortcut.signal_ax.clear()
-        drawing_shortcut.histogram_ax.clear()
-        # Plotting the signals
-        drawing_shortcut.signal_ax.set_facecolor('#f0f0f0')
-        drawing_shortcut.signal_ax.grid(True, color='white', linestyle='-', alpha=0.3)
+        try:
+            result_signal, result_metadata = SignalFileHandler.perform_convolution(
+                self.signal1_data,
+                self.signal2_data,
+                self.signal1_metadata,
+                self.signal2_metadata
+            )
 
-        drawing_shortcut.signal_ax.axhline(y=0, color='purple', linestyle='--', alpha=0.3)
-        drawing_shortcut.signal_ax.axvline(x=0, color='purple', linestyle='--', alpha=0.3)
+            save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
+            if save_filename:
+                SignalFileHandler.save_signal(save_filename, result_signal, result_metadata)
 
-        signal1_line, = drawing_shortcut.signal_ax.plot(time_array1, self.signal1_data, color='red', linewidth=0.8)
-        signal2_line, = drawing_shortcut.signal_ax.plot(time_array2, self.signal2_data, color='blue', linewidth=0.8)
-        drawing_shortcut.signal_ax.set_title(f'{COMPARISON_TITLE}')
-        drawing_shortcut.signal_ax.set_xlabel(TIME_AXIS)
-        drawing_shortcut.signal_ax.set_ylabel(AMPLITUDE_AXIS)
+                self.parent().generate_signal_from_file(save_filename)
+                self.close()
 
-        # legend, make colors match the signal colors
-        legend_name_1 = self.signal1_path.text().split('/')[-1]
-        legend_name_2 = self.signal2_path.text().split('/')[-1]
-        drawing_shortcut.signal_ax.legend([signal1_line, signal2_line], [legend_name_1, legend_name_2],
-                                          loc='upper right', fontsize=8, frameon=False, facecolor='white',
-                                          edgecolor='black', shadow=True)
-
-        drawing_shortcut.histogram_ax.set_facecolor('#f0f0f0')
-        drawing_shortcut.histogram_ax.clear()
-
-        drawing_shortcut.signal_figure.tight_layout()
-        drawing_shortcut.signal_canvas.draw()
-
-        self.calculate_comparisons()
-
-        self.close()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", ERROR_OPERATION_FAILED.format(str(e)))

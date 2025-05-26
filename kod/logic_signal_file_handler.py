@@ -16,8 +16,7 @@ class SignalFileHandler:
             sampling_freq = metadata.get('sampling_freq', sampling_freq)
             is_complex = metadata.get('is_complex', is_complex)
             num_samples = metadata.get('num_samples', len(signal_data))
-            duration = metadata.get('duration',
-                                    duration if duration is not None else len(signal_data) / sampling_freq)
+            duration = metadata.get('duration', duration)
         else:
             num_samples = len(signal_data)
             # Calculate duration if not provided
@@ -134,3 +133,52 @@ class SignalFileHandler:
 
         else:
             raise ValueError(f"Unsupported operation: {operation}")
+
+    def perform_convolution(signal1, signal2, metadata1=None, metadata2=None):
+        """
+        Perform 1D discrete convolution of signal1 with signal2.
+        Assumes signal1 is h(k) and signal2 is x(n).
+        """
+        M = len(signal1)
+        N = len(signal2)
+        output_length = M + N - 1
+        result = np.zeros(output_length)
+
+        for n in range(output_length):
+            for k in range(M):
+                if 0 <= n - k < N:
+                    result[n] += signal1[k] * signal2[n - k]
+
+        # Calculate new metadata
+        start_time1 = metadata1.get("start_time", 0.0) if metadata1 else 0.0
+        start_time2 = metadata2.get("start_time", 0.0) if metadata2 else 0.0
+
+        # Pick sampling frequency from the input signal (signal2) if available, else signal1
+        sampling_freq = None
+        if metadata2 and "sampling_freq" in metadata2:
+            sampling_freq = metadata2["sampling_freq"]
+        elif metadata1 and "sampling_freq" in metadata1:
+            sampling_freq = metadata1["sampling_freq"]
+        else:
+            sampling_freq = 1.0  # fallback default
+
+        is_complex = False
+        if metadata1 and metadata1.get("is_complex", False):
+            is_complex = True
+        if metadata2 and metadata2.get("is_complex", False):
+            is_complex = True
+
+        num_samples = output_length
+        duration = num_samples / sampling_freq if sampling_freq != 0 else 0
+
+        new_metadata = {
+            "start_time": start_time1 + start_time2,
+            "sampling_freq": sampling_freq,
+            "is_complex": is_complex,
+            "num_samples": num_samples,
+            "duration": duration,
+        }
+
+        print("NEW METADATA")
+        print(new_metadata)
+        return result, new_metadata

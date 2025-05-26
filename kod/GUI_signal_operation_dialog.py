@@ -2,7 +2,6 @@ from logic_signal_file_handler import SignalFileHandler
 from strings import *
 from PyQt5.QtWidgets import QButtonGroup, QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QRadioButton, QTextEdit, QVBoxLayout
 
-
 class SignalOperationDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
