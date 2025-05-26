@@ -121,3 +121,17 @@ COMPARISON_TITLE = 'Porównanie sygnałów'
 CONVOLUTION = 'Splot'
 SIGNAL_CONVOLUTION_DIALOG_TITLE = 'Splot sygnałów'
 PERFORM_CONVOLUTION = 'Wykonaj splot'
+
+
+#SINGAL CONVOLUTION
+FILTER = 'Filtr'
+SIGNAL_CONVOLUTION_DIALOG_TITLE = 'Splot sygnałów'
+PERFORM_CONVOLUTION = 'Wykonaj splot'
+
+#FILTER
+LOW_PASS_FILTER = 'Filtr dolnoprzepustowy'
+HIGH_PASS_FILTER ='Filtr górnoprzepustowy'
+HANNING_WINDOW = 'Okno Hanninga'
+CUT_OFF_FREQUENCY = 'Częstotliwość odcięcia'
+NUM_OF_TAPS = 'Liczba współczynników'
+PERFORM_FILTER = 'Przefiltruj'

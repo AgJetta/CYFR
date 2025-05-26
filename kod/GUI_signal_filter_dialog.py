@@ -3,13 +3,13 @@ import numpy as np
 from logic_signal_file_handler import SignalFileHandler
 from strings import *
 from PyQt5.QtWidgets import QButtonGroup, QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, \
-    QPushButton, QRadioButton, QTextEdit, QVBoxLayout, QFormLayout, QComboBox, QGroupBox
+    QPushButton, QRadioButton, QTextEdit, QVBoxLayout, QFormLayout, QGroupBox, QCheckBox
 
 
-class SignalConversionDialog(QDialog):
+class SignalFilterDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(CONVERSION)
+        self.setWindowTitle(FILTER)
         self.setGeometry(200, 200, 500, 400)
 
         layout = QVBoxLayout()
@@ -32,8 +32,8 @@ class SignalConversionDialog(QDialog):
         self.sampling_rate_input = QLineEdit()
         self.quantization_level_input = QLineEdit()
 
-        params_layout.addRow(SAMPLE_FREQ, self.sampling_rate_input)
-        params_layout.addRow(QUANTIZATION_LVL, self.quantization_level_input)
+        params_layout.addRow(CUT_OFF_FREQUENCY, self.sampling_rate_input)
+        params_layout.addRow(NUM_OF_TAPS, self.quantization_level_input)
 
 
         params_group = QGroupBox(SIGNAL_PARAMETERS)
@@ -42,16 +42,17 @@ class SignalConversionDialog(QDialog):
 
         operation_layout = QHBoxLayout()
         self.operation_group = QButtonGroup()
-        operations = [SAMPLING, QUANTIZATION, EXTRAPOLATION, INTERPOLATION, RECONSTRUCTION]
+        operations = [LOW_PASS_FILTER, HIGH_PASS_FILTER]
         for op in operations:
             radio_btn = QRadioButton(op)
             self.operation_group.addButton(radio_btn)
             operation_layout.addWidget(radio_btn)
         layout.addLayout(operation_layout)
 
+        self.hanning_checkbox = QCheckBox(HANNING_WINDOW)
+        layout.addWidget(self.hanning_checkbox)
 
-
-        perform_btn = QPushButton(PERFORM_CONVERSION)
+        perform_btn = QPushButton(PERFORM_FILTER)
         perform_btn.clicked.connect(self.perform_conversion)
         layout.addWidget(perform_btn)
 

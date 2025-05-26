@@ -12,9 +12,9 @@ from GUI_signal_conversion_dialog import SignalConversionDialog
 from kod.GUI_singal_convolution_diaog import SignalConvolutionDialog
 from logic_signal_generator import SignalGenerator
 from logic_signal_file_handler import SignalFileHandler
-from logic_signal_conversion import *
 from GUI_signal_operation_dialog import SignalOperationDialog
 from GUI_signal_comparison_dialog import SignalComparisonDialog
+from GUI_signal_filter_dialog import SignalFilterDialog
 from strings import *
 
 class DSPApplication(QMainWindow):
@@ -101,6 +101,8 @@ class DSPApplication(QMainWindow):
         convolution_btn = QPushButton(CONVOLUTION)
         convolution_btn.clicked.connect(self.show_signal_convolution)
 
+        filter_btn = QPushButton(FILTER)
+        filter_btn.clicked.connect(self.show_signal_filter)
 
         layout.addWidget(save_btn)
         layout.addWidget(load_btn)
@@ -109,6 +111,8 @@ class DSPApplication(QMainWindow):
         layout.addWidget(conversion_btn)
         layout.addWidget(comparison_btn)
         layout.addWidget(convolution_btn)
+        layout.addWidget(filter_btn)
+
 
     def add_comparison_button(self, layout):
         comparison_btn = QPushButton(SIGNAL_COMPARISON)
@@ -489,6 +493,11 @@ class DSPApplication(QMainWindow):
     def show_signal_convolution(self):
         dialog = SignalConvolutionDialog(self)
         dialog.exec_()
+
+    def show_signal_filter(self):
+        dialog = SignalFilterDialog(self)
+        dialog.exec_()
+
 
     def show_text_representation(self):
         if self.current_signal_data is None:
