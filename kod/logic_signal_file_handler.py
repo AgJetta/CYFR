@@ -202,17 +202,9 @@ class SignalFileHandler:
         print(f"Max/Min of signal2: {np.max(signal2)} / {np.min(signal2)}")
         print("-" * 40)
 
-        for n in range(output_length):
-            for k in range(M):
-                if 0 <= n - k < N:
-                    val = signal1[k] * signal2[n - k]
-                    result[n] += val
-                    print(f"n={n}, k={k}, signal1[{k}]={signal1[k]}, signal2[{n-k}]={signal2[n-k]}, val={val}")
-
+        result = np.convolve(signal1, signal2, mode='full')
 
         print("-" * 40)
-
-        print(f"Result: {result}")
 
         print(f"Max value in result: {np.max(result)}")
         print(f"Min value in result: {np.min(result)}")
