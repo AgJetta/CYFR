@@ -29,11 +29,11 @@ class SignalFilterDialog(QDialog):
         layout.addWidget(self.signal1_params)
 
         params_layout = QFormLayout()
-        self.sampling_rate_input = QLineEdit()
-        self.quantization_level_input = QLineEdit()
+        self.filtering_frequency_input = QLineEdit()
+        self.number_of_taps_input = QLineEdit()
 
-        params_layout.addRow(CUT_OFF_FREQUENCY, self.sampling_rate_input)
-        params_layout.addRow(NUM_OF_TAPS, self.quantization_level_input)
+        params_layout.addRow(CUT_OFF_FREQUENCY, self.filtering_frequency_input)
+        params_layout.addRow(NUM_OF_TAPS, self.number_of_taps_input)
 
 
         params_group = QGroupBox(SIGNAL_PARAMETERS)
@@ -53,7 +53,7 @@ class SignalFilterDialog(QDialog):
         layout.addWidget(self.hanning_checkbox)
 
         perform_btn = QPushButton(PERFORM_FILTER)
-        perform_btn.clicked.connect(self.perform_conversion)
+        perform_btn.clicked.connect(self.perform_filtering)
         layout.addWidget(perform_btn)
 
 
@@ -102,7 +102,7 @@ class SignalFilterDialog(QDialog):
                 metadata[key] = value
         return metadata
 
-    def perform_conversion(self):
+    def perform_filtering(self):
         if self.signal1_data is None:
             QMessageBox.critical(self, "Error", ERROR_LOAD_BOTH)
             return
@@ -119,22 +119,28 @@ class SignalFilterDialog(QDialog):
             metadata_dict = self.parse_metadata_text(metadata_text)
 
             # Read frequency and quantization level from inputs
-            frequency = self.sampling_rate_input.text().strip()
-            quantization_lvl = self.quantization_level_input.text().strip()
+            filtering_frequency = self.filtering_frequency_input.text().strip()
+            num_of_taps = self.number_of_taps_input.text().strip()
+            hanning = self.hanning_checkbox.isChecked()
+
+            print("filtering freq, num of taps, hanning")
+            print(filtering_frequency, num_of_taps, hanning)
 
             # Convert to appropriate types or set to None if empty
-            frequency = int(frequency) if frequency else None
-            quantization_lvl = int(quantization_lvl) if quantization_lvl else None
+            filtering_frequency = int(filtering_frequency) if filtering_frequency else None
+            num_of_taps = int(num_of_taps) if num_of_taps else None
 
             # Pass the inputs to the conversion function
-            result_signal, result_metadata = SignalFileHandler.perform_signal_conversion(
+            result_signal, result_metadata = SignalFileHandler.perform_signal_filtering(
                 self.signal1_data, metadata_dict, operation,
-                frequency=frequency, quantization_lvl=quantization_lvl
+                filtering_frequency=filtering_frequency, num_of_taps=num_of_taps, hanning=hanning
+
             )
 
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
             if save_filename:
                 SignalFileHandler.save_signal(save_filename, result_signal, metadata=result_metadata)
+                # print(result_metadata)
                 self.parent().generate_signal_from_file(save_filename)
                 self.close()
 

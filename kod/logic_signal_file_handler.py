@@ -4,6 +4,7 @@ import json
 import struct
 from logic_signal_conversion import *
 from strings import *
+from scipy.signal import firwin, lfilter
 
 
 class SignalFileHandler:
@@ -20,9 +21,9 @@ class SignalFileHandler:
         else:
             num_samples = len(signal_data)
             # Calculate duration if not provided
-            if duration is None:
-                duration = num_samples / sampling_freq
 
+        print("Saving signal, metadata")
+        print(metadata)
         # Build metadata
         metadata = {
             'start_time': start_time,
@@ -134,6 +135,55 @@ class SignalFileHandler:
         else:
             raise ValueError(f"Unsupported operation: {operation}")
 
+    @staticmethod
+    def perform_signal_filtering(signal, metadata, operation,
+                                 filtering_frequency=None, num_of_taps=None, hanning=False):
+        if filtering_frequency is None or num_of_taps is None:
+            raise ValueError("Filtering frequency and number of taps must be provided.")
+
+        sampling_freq = metadata.get("sampling_freq")
+        if sampling_freq is None:
+            raise ValueError("Sampling frequency is missing in metadata.")
+
+        nyquist = sampling_freq / 2.0
+        normalized_cutoff = filtering_frequency / nyquist
+
+        if not (0 < normalized_cutoff < 1):
+            raise ValueError("Cutoff frequency must be between 0 and Nyquist frequency.")
+
+        # Determine filter type
+        if operation == LOW_PASS_FILTER:
+            pass_zero = True
+        elif operation == HIGH_PASS_FILTER:
+            pass_zero = False
+        else:
+            raise ValueError(f"Unsupported operation: {operation}")
+
+        # Select window based on Hanning checkbox
+        window_type = 'hann' if hanning else 'boxcar'  # 'boxcar' = rectangular window (no windowing)
+
+        # Design FIR filter
+        taps = firwin(num_of_taps, normalized_cutoff, pass_zero=pass_zero, window=window_type)
+
+        # Apply the FIR filter
+        filtered_signal = lfilter(taps, 1.0, signal)
+
+        # print(f"Metedata")
+        # print(metadata)
+
+        # Build new metadata (duration stays the same, but technically you could recalc if needed)
+        new_metadata = metadata.copy()
+        new_metadata.update({
+            'num_samples': len(filtered_signal),
+        })
+
+
+        # print(f"Filtered signal")
+        # print(new_metadata)
+        # print("end of perform signal filtering func")
+        return filtered_signal, new_metadata
+
+
     def perform_convolution(signal1, signal2, metadata1=None, metadata2=None):
         """
         Perform 1D discrete convolution of signal1 with signal2.
@@ -144,17 +194,34 @@ class SignalFileHandler:
         output_length = M + N - 1
         result = np.zeros(output_length)
 
+        print("DEBUG INFO:")
+        print(f"Length of signal1 (h): {M}")
+        print(f"Length of signal2 (x): {N}")
+        print(f"Output length: {output_length}")
+        print(f"Max/Min of signal1: {np.max(signal1)} / {np.min(signal1)}")
+        print(f"Max/Min of signal2: {np.max(signal2)} / {np.min(signal2)}")
+        print("-" * 40)
+
         for n in range(output_length):
             for k in range(M):
                 if 0 <= n - k < N:
-                    result[n] += signal1[k] * signal2[n - k]
+                    val = signal1[k] * signal2[n - k]
+                    result[n] += val
+                    print(f"n={n}, k={k}, signal1[{k}]={signal1[k]}, signal2[{n-k}]={signal2[n-k]}, val={val}")
+
+
+        print("-" * 40)
+
+        print(f"Result: {result}")
+
+        print(f"Max value in result: {np.max(result)}")
+        print(f"Min value in result: {np.min(result)}")
+        print("=" * 60)
 
         # Calculate new metadata
         start_time1 = metadata1.get("start_time", 0.0) if metadata1 else 0.0
         start_time2 = metadata2.get("start_time", 0.0) if metadata2 else 0.0
 
-        # Pick sampling frequency from the input signal (signal2) if available, else signal1
-        sampling_freq = None
         if metadata2 and "sampling_freq" in metadata2:
             sampling_freq = metadata2["sampling_freq"]
         elif metadata1 and "sampling_freq" in metadata1:
@@ -162,22 +229,21 @@ class SignalFileHandler:
         else:
             sampling_freq = 1.0  # fallback default
 
-        is_complex = False
-        if metadata1 and metadata1.get("is_complex", False):
-            is_complex = True
-        if metadata2 and metadata2.get("is_complex", False):
-            is_complex = True
-
         num_samples = output_length
         duration = num_samples / sampling_freq if sampling_freq != 0 else 0
 
         new_metadata = {
             "start_time": start_time1 + start_time2,
             "sampling_freq": sampling_freq,
-            "is_complex": is_complex,
             "num_samples": num_samples,
             "duration": duration,
         }
+
+        print("\nNEW METADATA:")
+        print(new_metadata)
+        print(f"Max value in result: {np.max(result)}")
+        print(f"Min value in result: {np.min(result)}")
+        print("=" * 60)
 
         print("NEW METADATA")
         print(new_metadata)
