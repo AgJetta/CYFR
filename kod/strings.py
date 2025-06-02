@@ -135,3 +135,7 @@ HANNING_WINDOW = 'Okno Hanninga'
 CUT_OFF_FREQUENCY = 'Częstotliwość odcięcia'
 NUM_OF_TAPS = 'Liczba współczynników'
 PERFORM_FILTER = 'Przefiltruj'
+
+SIGNAL_CORRELATION_DIALOG_TITLE = 'Analiza korelacyjna'
+CORRELATION = 'Korelacja'
+CORRELATION_ANALYSIS = 'Wykonaj analizę korelacyjna'

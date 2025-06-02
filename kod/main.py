@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from GUI_signal_conversion_dialog import SignalConversionDialog
+from GUI_signal_correlation_dialog import SignalCorrelationDialog
 from GUI_singal_convolution_diaog import SignalConvolutionDialog
 from logic_signal_generator import SignalGenerator
 from logic_signal_file_handler import SignalFileHandler
@@ -104,6 +105,10 @@ class DSPApplication(QMainWindow):
         filter_btn = QPushButton(FILTER)
         filter_btn.clicked.connect(self.show_signal_filter)
 
+        correlation_btn = QPushButton(CORRELATION)
+        correlation_btn.clicked.connect(self.show_signal_correlation)
+
+
         layout.addWidget(save_btn)
         layout.addWidget(load_btn)
         layout.addWidget(operations_btn)
@@ -112,6 +117,7 @@ class DSPApplication(QMainWindow):
         layout.addWidget(comparison_btn)
         layout.addWidget(convolution_btn)
         layout.addWidget(filter_btn)
+        layout.addWidget(correlation_btn)
 
 
     def add_comparison_button(self, layout):
@@ -496,6 +502,10 @@ class DSPApplication(QMainWindow):
 
     def show_signal_filter(self):
         dialog = SignalFilterDialog(self)
+        dialog.exec_()
+
+    def show_signal_correlation(self):
+        dialog = SignalCorrelationDialog(self)
         dialog.exec_()
 
 
