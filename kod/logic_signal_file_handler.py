@@ -7,9 +7,97 @@ from strings import *
 from scipy.signal import firwin, lfilter
 
 
+def design_lowpass_filter(M, K, window_type='boxcar'):
+    """
+    Design a lowpass FIR filter using the window method.
+    
+    Parameters:
+    M: Number of filter coefficients (should be odd)
+    K: Parameter defining cutoff frequency (fo = fp/K)
+    window_type: 'boxcar' or 'hann'
+    
+    Returns:
+    h: Filter impulse response coefficients
+    """
+    if M % 2 == 0:
+        raise ValueError("M should be odd for symmetric filter")
+    
+    # Calculate impulse response based on equation (4) from context
+    h = np.zeros(M)
+    center = (M - 1) // 2
+    
+    for n in range(M):
+        if n == center:
+            # For n = (M-1)/2, h(n) = 2/K
+            h[n] = 2.0 / K
+        else:
+            # For other cases: sin(2π(n-(M-1)/2)/K) / (π(n-(M-1)/2))
+            arg = 2 * np.pi * (n - center) / K
+            h[n] = np.sin(arg) / (np.pi * (n - center))
+    
+    # Apply window function
+    if window_type == 'hann':
+        # Hanning window from equation (6): w(n) = 0.5 - 0.5*cos(2πn/M)
+        window = np.array([0.5 - 0.5 * np.cos(2 * np.pi * n / M) for n in range(M)])
+        h = h * window
+    # For boxcar window, no multiplication needed (rectangular window = 1)
+    
+    return h
+
+def design_highpass_filter(M, K, window_type='hann'):
+    """
+    Design a highpass FIR filter using spectral inversion of lowpass filter.
+    
+    Parameters:
+    M: Number of filter coefficients (should be odd)
+    K: Parameter defining cutoff frequency (fo = fp/K)
+    window_type: 'boxcar' or 'hann'
+    
+    Returns:
+    h: Filter impulse response coefficients
+    """
+    # Start with lowpass filter
+    h_lp = design_lowpass_filter(M, K, window_type)
+    
+    # Convert to highpass using spectral inversion
+    # Subtract from delta function (impulse at center)
+    h_hp = -h_lp
+    center = (M - 1) // 2
+    h_hp[center] += 1  # Add unit impulse at center
+    
+    return h_hp
+
+def apply_filter(signal, filter_coeffs, mode='same'):
+    """
+    Apply FIR filter to signal using convolution.
+    Based on equation (3) from context: y(n) = Σ h(k)x(n-k)
+    
+    Parameters:
+    signal: Input signal
+    filter_coeffs: Filter impulse response coefficients
+    mode: 'same', 'full', or 'valid'
+          - 'same': Output same length as input signal
+          - 'full': Full convolution (len(signal) + len(filter) - 1)
+          - 'valid': Only where filter completely overlaps signal
+    
+    Returns:
+    filtered_signal: Output signal
+    """
+    if mode == 'same':
+        # Ensure output length matches input signal length
+        result = np.convolve(signal, filter_coeffs, mode='full')
+        # Extract the central portion matching input length
+        delay = len(filter_coeffs) // 2
+        start_idx = delay
+        end_idx = start_idx + len(signal)
+        return result[start_idx:end_idx]
+    else:
+        return np.convolve(signal, filter_coeffs, mode=mode)
+
+
 class SignalFileHandler:
     @staticmethod
-    def save_signal(filename, signal_data, metadata=None, start_time=0, sampling_freq=1, is_complex=False,
+    def save_signal(filename, signal_data, metadata: dict = None, start_time=0, sampling_freq=1, is_complex=False,
                     duration=None):
         # If metadata is provided, use its values and override the arguments
         if metadata is not None:
@@ -17,7 +105,7 @@ class SignalFileHandler:
             sampling_freq = metadata.get('sampling_freq', sampling_freq)
             is_complex = metadata.get('is_complex', is_complex)
             num_samples = metadata.get('num_samples', len(signal_data))
-            duration = metadata.get('duration', duration)
+            duration = metadata.get('duration', duration if duration is not None else num_samples / sampling_freq)
         else:
             num_samples = len(signal_data)
             # Calculate duration if not provided
@@ -137,7 +225,7 @@ class SignalFileHandler:
 
     @staticmethod
     def perform_signal_filtering(signal, metadata, operation,
-                                 filtering_frequency=None, num_of_taps=None, hanning=False):
+                                 filtering_frequency=None, num_of_taps=None, is_hanning_window=False):
         if filtering_frequency is None or num_of_taps is None:
             raise ValueError("Filtering frequency and number of taps must be provided.")
 
@@ -151,36 +239,27 @@ class SignalFileHandler:
         if not (0 < normalized_cutoff < 1):
             raise ValueError("Cutoff frequency must be between 0 and Nyquist frequency.")
 
-        # Determine filter type
+        # Window type
+        if is_hanning_window:
+            window_type = 'hann'
+        else:
+            window_type = 'boxcar'
+
         if operation == LOW_PASS_FILTER:
-            pass_zero = True
+            filter_function = design_lowpass_filter
         elif operation == HIGH_PASS_FILTER:
-            pass_zero = False
+            filter_function = design_highpass_filter
         else:
             raise ValueError(f"Unsupported operation: {operation}")
 
-        # Select window based on Hanning checkbox
-        window_type = 'hann' if hanning else 'boxcar'  # 'boxcar' = rectangular window (no windowing)
+        K = np.floor(sampling_freq / filtering_frequency)
+        filtered_signal = apply_filter(signal, filter_function(num_of_taps, K, window_type))
 
-        # Design FIR filter
-        taps = firwin(num_of_taps, normalized_cutoff, pass_zero=pass_zero, window=window_type)
-
-        # Apply the FIR filter
-        filtered_signal = lfilter(taps, 1.0, signal)
-
-        # print(f"Metedata")
-        # print(metadata)
-
-        # Build new metadata (duration stays the same, but technically you could recalc if needed)
         new_metadata = metadata.copy()
-        new_metadata.update({
-            'num_samples': len(filtered_signal),
-        })
+        new_metadata["filtering_frequency"] = filtering_frequency
+        new_metadata["num_of_taps"] = num_of_taps
+        new_metadata["is_hanning_window"] = is_hanning_window
 
-
-        # print(f"Filtered signal")
-        # print(new_metadata)
-        # print("end of perform signal filtering func")
         return filtered_signal, new_metadata
 
 

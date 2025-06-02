@@ -55,6 +55,8 @@ class SignalOperationDialog(QDialog):
 
         self.signal1_data = None
         self.signal2_data = None
+        self.signal1_metadata = None
+        self.signal2_metadata = None
 
     def load_signal(self, path_input):
         filename, _ = QFileDialog.getOpenFileName(self, LOAD_SIGNAL, "", "Binary Files (*.bin)")
@@ -70,9 +72,11 @@ class SignalOperationDialog(QDialog):
                 if path_input == self.signal1_path:
                     self.signal1_params.setText(params_text)
                     self.signal1_data = signal_data
+                    self.signal1_metadata = metadata
                 else:
                     self.signal2_params.setText(params_text)
                     self.signal2_data = signal_data
+                    self.signal2_metadata = metadata
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
@@ -95,9 +99,18 @@ class SignalOperationDialog(QDialog):
                 operation
             )
 
+            metadata = {
+                'sampling_freq': self.signal1_metadata['sampling_freq'],
+                'num_samples': len(result_signal),
+                'signal_type': SIGNAL_TYPE,
+                'operation': operation,
+                'duration': self.signal1_metadata['duration'],
+            }
+
+
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
             if save_filename:
-                SignalFileHandler.save_signal(save_filename, result_signal)
+                SignalFileHandler.save_signal(save_filename, result_signal, metadata)
 
                 self.parent().generate_signal_from_file(save_filename)
                 self.close()

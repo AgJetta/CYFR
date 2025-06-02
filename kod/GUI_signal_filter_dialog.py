@@ -133,7 +133,7 @@ class SignalFilterDialog(QDialog):
             # Pass the inputs to the conversion function
             result_signal, result_metadata = SignalFileHandler.perform_signal_filtering(
                 self.signal1_data, metadata_dict, operation,
-                filtering_frequency=filtering_frequency, num_of_taps=num_of_taps, hanning=hanning
+                filtering_frequency=filtering_frequency, num_of_taps=num_of_taps, is_hanning_window=hanning
 
             )
 

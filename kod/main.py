@@ -381,18 +381,22 @@ class DSPApplication(QMainWindow):
         elif signal_type == UNIT_NOISE:
             self.unit_noise_params_container.setVisible(True)
 
-    def generate_signal(self):
+    def clear_all_plot_parameters(self):
         self.signal_ax.clear()
         self.histogram_ax.clear()
         self.signal_ax.relim()
         self.histogram_ax.relim()
         self.signal_ax.autoscale()
         self.histogram_ax.autoscale()
+
+    def generate_signal(self):
+        self.clear_all_plot_parameters()
         
         signal_type = self.signal_type_combo.currentText()
         amplitude = self.common_parameter_inputs[AMPLITUDE].value()
         start_time = self.common_parameter_inputs[START_TIME].value()
         duration = self.common_parameter_inputs[DURATION].value()
+
         
         t, signal = self.generate_signal_by_type(signal_type, amplitude, start_time, duration)
         self.current_signal_data = signal
@@ -407,6 +411,8 @@ class DSPApplication(QMainWindow):
         self.signal_canvas.draw()
 
     def plot_signal_and_histogram(self, t, signal, signal_type, x_axis_label=TIME_AXIS):
+        self.clear_all_plot_parameters()
+
         self.signal_ax.set_facecolor('#f0f0f0')
         self.signal_ax.grid(True, color='white', linestyle='-', alpha=0.3)
         
@@ -468,7 +474,7 @@ class DSPApplication(QMainWindow):
             )
             print(metadata);
             # Plot the signal and histogram
-            self.plot_signal_and_histogram(time_array, signal_data, LOADED_SIGNAL, TIME_AXIS)
+            self.plot_signal_and_histogram(time_array, signal_data, filename, TIME_AXIS)
 
             # Calculate and display signal parameters
             params = SignalGenerator.calculate_signal_parameters(signal_data)
@@ -538,8 +544,8 @@ class DSPApplication(QMainWindow):
 
 
 
-    def generate_signal_by_type(self, signal_type, amplitude, start_time, duration):
-        sampling_rate = self.common_parameter_inputs[SAMPLE_RATE].value()
+    def generate_signal_by_type(self, signal_type, amplitude, start_time, duration, sampling_rate=None):
+        sampling_rate = self.common_parameter_inputs[SAMPLE_RATE].value() if sampling_rate is None else sampling_rate
         
         if signal_type == UNIFORM_NOISE:
             return SignalGenerator.generate_uniform_noise(amplitude, start_time, duration, sampling_rate)
