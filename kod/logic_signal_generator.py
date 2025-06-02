@@ -27,39 +27,39 @@ class SignalGenerator:
         t = SignalGenerator.get_timeseries(start_time, duration, sampling_rate)
         signal = amplitude * np.sin(2 * np.pi * (t - start_time) * signal_frequency)
 
-        print(f"Time: {t}\n")
-        print(f"Signal: {signal}\n")
         return t, signal
 
     @staticmethod
-    def generate_half_wave_rectified(amplitude, period, start_time, duration, sampling_rate=1000):
+    def generate_half_wave_rectified(amplitude, signal_frequency, start_time, duration, sampling_rate=1000):
         t = SignalGenerator.get_timeseries(start_time, duration, sampling_rate)
-        sin_wave = np.sin(2 * np.pi * (t - start_time) / period)
+        sin_wave = np.sin(2 * np.pi * (t - start_time) * signal_frequency)
         signal = amplitude / 2 * (sin_wave + np.abs(sin_wave))
         return t, signal
 
     @staticmethod
-    def generate_full_wave_rectified(amplitude, period, start_time, duration, sampling_rate=1000):
+    def generate_full_wave_rectified(amplitude, signal_frequency, start_time, duration, sampling_rate=1000):
         t = SignalGenerator.get_timeseries(start_time, duration, sampling_rate)
-        sin_wave = np.sin(2 * np.pi * (t - start_time) / period)
+        sin_wave = np.sin(2 * np.pi * (t - start_time) * signal_frequency)
         signal = amplitude * np.abs(sin_wave)
         return t, signal
 
     @staticmethod
-    def generate_square_wave(amplitude, period, start_time, duration, duty_cycle=0.5, sampling_rate=1000):
+    def generate_square_wave(amplitude, signal_frequency, start_time, duration, duty_cycle=0.5, sampling_rate=1000):
         t = SignalGenerator.get_timeseries(start_time, duration, sampling_rate)
+        period = 1 / signal_frequency
         signal = amplitude * (((t - start_time) % period) / period <= duty_cycle).astype(float)
         return t, signal
 
     @staticmethod
-    def generate_symmetric_square_wave(amplitude, period, start_time, duration, duty_cycle=0.5, sampling_rate=1000):
-        t, signal = SignalGenerator.generate_square_wave(amplitude, period, start_time, duration, duty_cycle, sampling_rate)
+    def generate_symmetric_square_wave(amplitude, signal_frequency, start_time, duration, duty_cycle=0.5, sampling_rate=1000):
+        t, signal = SignalGenerator.generate_square_wave(amplitude, signal_frequency, start_time, duration, duty_cycle, sampling_rate)
         signal[signal == 0] = -amplitude
         return t, signal
 
     @staticmethod
-    def generate_triangular_wave(amplitude, period, start_time, duration, duty_cycle=0.5, sampling_rate=1000):
+    def generate_triangular_wave(amplitude, signal_frequency, start_time, duration, duty_cycle=0.5, sampling_rate=1000):
         t = SignalGenerator.get_timeseries(start_time, duration, sampling_rate)
+        period = 1 / signal_frequency
         phase = (t - start_time) % period / period
         signal = amplitude * (2 * np.abs(2 * (phase - duty_cycle)) - 1)
         return t, signal
