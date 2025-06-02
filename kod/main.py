@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from GUI_signal_conversion_dialog import SignalConversionDialog
-from kod.GUI_singal_convolution_diaog import SignalConvolutionDialog
+from GUI_singal_convolution_diaog import SignalConvolutionDialog
 from logic_signal_generator import SignalGenerator
 from logic_signal_file_handler import SignalFileHandler
 from GUI_signal_operation_dialog import SignalOperationDialog
