@@ -234,10 +234,33 @@ class SignalFileHandler:
         print(new_metadata)
         return result, new_metadata
 
-    @classmethod
+    @staticmethod
     def perform_correlation(signal1, signal2, signal1_metadata, signal2_metadata):
-        
+        M = len(signal1)
+        N = len(signal2)
+        output_length = M + N - 1
 
-        
+        result = np.correlate(signal1, signal2, mode='full')
+
+        start_time1 = signal1_metadata.get("start_time", 0.0) if signal1_metadata else 0.0
+        start_time2 = signal2_metadata.get("start_time", 0.0) if signal2_metadata else 0.0
+
+        if signal2_metadata and "sampling_freq" in signal2_metadata:
+            sampling_freq = signal2_metadata["sampling_freq"]
+        elif signal1_metadata and "sampling_freq" in signal1_metadata:
+            sampling_freq = signal1_metadata["sampling_freq"]
+        else:
+            sampling_freq = 1.0  # fallback default
+
+        num_samples = output_length
+        duration = num_samples / sampling_freq if sampling_freq != 0 else 0
+
+        new_metadata = {
+            "start_time": start_time1 + start_time2,
+            "sampling_freq": sampling_freq,
+            "num_samples": num_samples,
+            "duration": duration,
+        }
+
         return result, new_metadata
 
