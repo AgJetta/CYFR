@@ -236,6 +236,8 @@ class SignalFileHandler:
 
     @classmethod
     def perform_correlation(signal1, signal2, signal1_metadata, signal2_metadata):
-        result, new_metadata = None;
+        
+
+        
         return result, new_metadata
 
