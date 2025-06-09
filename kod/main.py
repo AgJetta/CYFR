@@ -16,6 +16,7 @@ from logic_signal_file_handler import SignalFileHandler
 from GUI_signal_operation_dialog import SignalOperationDialog
 from GUI_signal_comparison_dialog import SignalComparisonDialog
 from GUI_signal_filter_dialog import SignalFilterDialog
+from GUI_signal_transformation_dialog import SignalTransformationDialog
 from strings import *
 
 class DSPApplication(QMainWindow):
@@ -108,6 +109,9 @@ class DSPApplication(QMainWindow):
         correlation_btn = QPushButton(CORRELATION)
         correlation_btn.clicked.connect(self.show_signal_correlation)
 
+        transformation_btn = QPushButton(TRANSFORMATION)
+        transformation_btn.clicked.connect(self.show_signal_transformation)
+
 
         layout.addWidget(save_btn)
         layout.addWidget(load_btn)
@@ -118,6 +122,7 @@ class DSPApplication(QMainWindow):
         layout.addWidget(convolution_btn)
         layout.addWidget(filter_btn)
         layout.addWidget(correlation_btn)
+        layout.addWidget(transformation_btn)
 
 
     def add_comparison_button(self, layout):
@@ -294,6 +299,9 @@ class DSPApplication(QMainWindow):
         unit_impulse_params_container.setVisible(False)
         self.unit_impulse_params_container = unit_impulse_params_container
 
+    def show_signal_transformation(self):
+        dialog = SignalTransformationDialog(self)
+        dialog.exec_()
     def create_unit_noise_parameters(self, layout):
         unit_noise_params_widget = QWidget()
         unit_noise_params_layout = QGridLayout()

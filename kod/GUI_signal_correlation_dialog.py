@@ -90,7 +90,7 @@ class SignalCorrelationDialog(QDialog):
                 self.signal1_data,
                 self.signal2_data,
                 self.signal1_metadata,
-                self.signal2_metadata
+                self.signal2_metadata,
             )
 
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")

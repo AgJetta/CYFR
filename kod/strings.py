@@ -139,3 +139,9 @@ PERFORM_FILTER = 'Przefiltruj'
 SIGNAL_CORRELATION_DIALOG_TITLE = 'Analiza korelacyjna'
 CORRELATION = 'Korelacja'
 CORRELATION_ANALYSIS = 'Wykonaj analizę korelacyjna'
+
+
+TRANSFORMATION = 'Transformacja'
+SIGNAL_TRANSFORMATION = 'Transformacja sygnału'
+DISCRETE_FOURIER = 'Dyskretna Transformacja Fouriera'
+WAVE_TRANSFORMATION_DB4 = 'Transformacje '
