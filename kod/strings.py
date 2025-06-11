@@ -1,4 +1,7 @@
 # Signal Types
+
+DIGITAL_SIGNAL_PROCESSING = 'Cyfrowe przetwarzanie sygnałów'
+
 UNIFORM_NOISE = 'Szum jednostajny'
 GAUSSIAN_NOISE = 'Szum gaussowski'
 SINUSOIDAL_SIGNAL = 'Sygnał sinusoidalny'
@@ -121,12 +124,8 @@ COMPARISON_TITLE = 'Porównanie sygnałów'
 CONVOLUTION = 'Splot'
 SIGNAL_CONVOLUTION_DIALOG_TITLE = 'Splot sygnałów'
 PERFORM_CONVOLUTION = 'Wykonaj splot'
-
-
-#SINGAL CONVOLUTION
 FILTER = 'Filtr'
-SIGNAL_CONVOLUTION_DIALOG_TITLE = 'Splot sygnałów'
-PERFORM_CONVOLUTION = 'Wykonaj splot'
+
 
 #FILTER
 LOW_PASS_FILTER = 'Filtr dolnoprzepustowy'
@@ -143,5 +142,8 @@ CORRELATION_ANALYSIS = 'Wykonaj analizę korelacyjna'
 
 TRANSFORMATION = 'Transformacja'
 SIGNAL_TRANSFORMATION = 'Transformacja sygnału'
-DISCRETE_FOURIER = 'Dyskretna Transformacja Fouriera'
-WAVE_TRANSFORMATION_DB4 = 'Transformacje '
+FOURIER_TRANSFORMATION = 'Transformacja Fouriera'
+WAVE_TRANSFORMATION = 'Transformacja Falkowa'
+WAVE_TRANSFORMATION_PARAMS = 'Transformacja falkowa (jeden poziom)'
+PERFORM_TRANSFORMATION = 'Wykonaj Transformację'
+CHOOSE_TRANSFORMATION_METHOD = 'Wybierz metode transformacji'

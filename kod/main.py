@@ -22,7 +22,7 @@ from strings import *
 class DSPApplication(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Digital Signal Processing')
+        self.setWindowTitle(DIGITAL_SIGNAL_PROCESSING)
         self.setGeometry(100, 100, 1400, 800)
 
         main_widget = QWidget()

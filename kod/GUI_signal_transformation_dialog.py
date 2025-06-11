@@ -32,12 +32,12 @@ class SignalTransformationDialog(QDialog):
         self.quantization_level_input = QLineEdit()
 
         # --- Wybór typu transformacji ---
-        method_select_group = QGroupBox("Wybierz metodę analizy sygnału")
+        method_select_group = QGroupBox(CHOOSE_TRANSFORMATION_METHOD)
         method_select_layout = QHBoxLayout()
 
         self.method_group = QButtonGroup()
-        self.fourier_radio = QRadioButton("Transformacja Fouriera")
-        self.wavelet_radio = QRadioButton("Transformacja Falkowa")
+        self.fourier_radio = QRadioButton(FOURIER_TRANSFORMATION)
+        self.wavelet_radio = QRadioButton(WAVE_TRANSFORMATION)
 
         self.method_group.addButton(self.fourier_radio)
         self.method_group.addButton(self.wavelet_radio)
@@ -49,11 +49,11 @@ class SignalTransformationDialog(QDialog):
         layout.addWidget(method_select_group)
 
         # --- Grupa: Transformacje Fouriera ---
-        self.fourier_group = QGroupBox("Transformacje Fouriera")
+        self.fourier_group = QGroupBox(FOURIER_TRANSFORMATION)
         fourier_layout = QVBoxLayout()
 
         self.fourier_button_group = QButtonGroup()
-        fourier_transforms = ["FFT"]  # Możesz dodać inne, np. "DCT"
+        fourier_transforms = ["DIF FFT"]  # Możesz dodać inne, np. "DCT"
         for ft in fourier_transforms:
             btn = QRadioButton(ft)
             self.fourier_button_group.addButton(btn)
@@ -63,9 +63,9 @@ class SignalTransformationDialog(QDialog):
         layout.addWidget(self.fourier_group)
 
         # --- Grupa: Transformacje Falkowe ---
-        self.wavelet_group = QGroupBox("Transformacja Falkowa")
+        self.wavelet_group = QGroupBox(WAVE_TRANSFORMATION)
         wavelet_layout = QVBoxLayout()
-        wavelet_layout.addWidget(QLabel("Transformacja falkowa (jeden poziom)"))
+        wavelet_layout.addWidget(QLabel(WAVE_TRANSFORMATION_PARAMS))
 
         self.wavelet_combo = QComboBox()
         self.wavelet_combo.addItems(["DB4", "DB6", "DB8"])
@@ -75,8 +75,8 @@ class SignalTransformationDialog(QDialog):
         layout.addWidget(self.wavelet_group)
 
         # --- Przycisk wykonania ---
-        perform_btn = QPushButton(PERFORM_CONVERSION)
-        perform_btn.clicked.connect(self.perform_conversion)
+        perform_btn = QPushButton(PERFORM_TRANSFORMATION)
+        perform_btn.clicked.connect(self.perform_transformation)
         layout.addWidget(perform_btn)
 
         # --- Ukrywanie/pokazywanie odpowiednich grup
@@ -124,28 +124,7 @@ class SignalTransformationDialog(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
-    def parse_metadata_text(self, text):
-        lines = text.strip().split('\n')
-        metadata = {}
-        for line in lines[1:]:  # Skip the METADATA_LABEL line
-            if ':' in line:
-                key, value = line.split(':', 1)
-                key = key.strip()
-                value = value.strip()
-                # Try converting to appropriate data type
-                if value.lower() == 'true':
-                    value = True
-                elif value.lower() == 'false':
-                    value = False
-                else:
-                    try:
-                        value = float(value) if '.' in value else int(value)
-                    except ValueError:
-                        pass
-                metadata[key] = value
-        return metadata
-
-    def perform_conversion(self):
+    def perform_transformation(self):
         if self.signal1_data is None:
             QMessageBox.critical(self, "Error", ERROR_LOAD_BOTH)
             return
