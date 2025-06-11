@@ -1,9 +1,11 @@
+import json
+import struct
+
 import numpy as np
 from logic_signal_file_handler import SignalFileHandler
 from strings import *
 from PyQt5.QtWidgets import QButtonGroup, QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit, QMessageBox, \
     QPushButton, QRadioButton, QTextEdit, QVBoxLayout, QGroupBox, QFormLayout, QComboBox
-from logic_comparisons import mean_squared_error, signal_to_noise_ratio, peak_signal_to_noise_ratio, max_difference
 
 class SignalTransformationDialog(QDialog):
     def __init__(self, parent=None):
@@ -87,10 +89,6 @@ class SignalTransformationDialog(QDialog):
         self.fourier_radio.setChecked(True)
         self.toggle_transform_groups()  # Funkcja definiowana niżej
 
-
-
-
-
         self.setLayout(layout)
 
         self.signal1_data = None
@@ -104,54 +102,84 @@ class SignalTransformationDialog(QDialog):
             self.wavelet_group.setVisible(True)
 
 
-    def load_signal(self, path_input):
-        filename, _ = QFileDialog.getOpenFileName(self, LOAD_SIGNAL, "", "Binary Files (*.bin)")
-        if filename:
-            path_input.setText(filename)
+    def parse_metadata_text(self, text):
+        lines = text.strip().split('\n')
+        metadata = {}
+        for line in lines[1:]:  # Skip the METADATA_LABEL line
+            if ':' in line:
+                key, value = line.split(':', 1)
+                key = key.strip()
+                value = value.strip()
+                # Try converting to appropriate data type
+                if value.lower() == 'true':
+                    value = True
+                elif value.lower() == 'false':
+                    value = False
+                else:
+                    try:
+                        value = float(value) if '.' in value else int(value)
+                    except ValueError:
+                        pass
+                metadata[key] = value
+        return metadata
 
-            try:
-                metadata, signal_data = SignalFileHandler.load_signal(filename)
-                params_text = f"{METADATA_LABEL}\n"
-                for key, value in metadata.items():
-                    params_text += f"{key}: {value}\n"
+    @staticmethod
+    def load_signal(filename):
+        with open(filename, 'rb') as f:
+            # Read metadata length (4 bytes = unsigned int)
+            metadata_len = struct.unpack('I', f.read(4))[0]
 
-                if path_input == self.signal1_path:
-                    self.signal1_params.setText(params_text)
-                    self.signal1_data = signal_data
-                    # For debugging purposes, you can print out the signal data
-                    # print(f"PARAMETRY: ", params_text)
-                    # print(f"SIGNAL: ", signal_data)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
+            # Read metadata as JSON
+            metadata_json = f.read(metadata_len).decode('utf-8')
+            metadata = json.loads(metadata_json)
+
+            num_samples = metadata.get("num_samples", 0)
+            is_complex = metadata.get("is_complex", False)
+
+            if is_complex:
+                # Each complex sample = 16 bytes (2 doubles: real + imag)
+                total_bytes = num_samples * 16
+                raw = f.read(total_bytes)
+                data = struct.unpack(f'{num_samples * 2}d', raw)  # unpack to flat list of doubles
+                signal_data = np.array(data[::2]) + 1j * np.array(data[1::2])
+            else:
+                # Each real sample = 8 bytes (1 double)
+                total_bytes = num_samples * 8
+                raw = f.read(total_bytes)
+                signal_data = np.array(struct.unpack(f'{num_samples}d', raw))
+
+            return metadata, signal_data
+
 
     def perform_transformation(self):
         if self.signal1_data is None:
-            QMessageBox.critical(self, "Error", ERROR_LOAD_BOTH)
+            QMessageBox.critical(self, "Error", ERROR_LOADING)
             return
-
-        selected_op = self.operation_group.checkedButton()
-        if not selected_op:
-            QMessageBox.critical(self, "Error", ERROR_SELECT_OPERATION)
-            return
-
-        operation = selected_op.text()
 
         try:
             metadata_text = self.signal1_params.toPlainText()
             metadata_dict = self.parse_metadata_text(metadata_text)
 
-            # Read frequency and quantization level from inputs
-            frequency = self.sampling_rate_input.text().strip()
-            quantization_lvl = self.quantization_level_input.text().strip()
+            # Determine selected operation
+            if self.fourier_radio.isChecked():
+                selected_op = self.fourier_button_group.checkedButton()
+                if not selected_op:
+                    QMessageBox.critical(self, "Error", ERROR_SELECT_OPERATION)
+                    return
+                operation = selected_op.text()  # e.g., "DIF FFT"
 
-            # Convert to appropriate types or set to None if empty
-            frequency = int(frequency) if frequency else None
-            quantization_lvl = int(quantization_lvl) if quantization_lvl else None
+            elif self.wavelet_radio.isChecked():
+                operation = self.wavelet_combo.currentText()  # e.g., "DB4"
+            else:
+                QMessageBox.critical(self, "Error", ERROR_SELECT_OPERATION)
+                return
 
-            # Pass the inputs to the conversion function
-            result_signal, result_metadata = SignalFileHandler.perform_signal_conversion(
-                self.signal1_data, metadata_dict, operation,
-                frequency=frequency, quantization_lvl=quantization_lvl
+            # print("OPERATION")
+            # print(operation)
+
+            # Perform transformation
+            result_signal, result_metadata = SignalFileHandler.perform_signal_transformation(
+                self.signal1_data, metadata_dict, operation
             )
 
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")

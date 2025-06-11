@@ -7,6 +7,7 @@ from strings import *
 from filtering import (
     design_lowpass_filter, design_highpass_filter, apply_filter
 )
+from logic_signal_transformations import *
 
 
 class SignalFileHandler:
@@ -261,6 +262,17 @@ class SignalFileHandler:
             "num_samples": num_samples,
             "duration": duration,
         }
-
         return result, new_metadata
 
+
+    @staticmethod
+    def perform_signal_transformation(signal, metadata, operation):
+        if operation == "DIF FFT":
+            return perform_dif_fft(signal, metadata)
+        elif operation == "DB4":
+            return perform_wavelet_transform(signal, metadata, "db4")
+        elif operation == "DB6":
+            return perform_wavelet_transform(signal, metadata, "db6")
+        # Add more as needed
+        else:
+            raise ValueError(f"Unsupported transformation operation: {operation}")
