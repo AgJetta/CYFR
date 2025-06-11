@@ -408,9 +408,9 @@ class DSPApplication(QMainWindow):
         
         t, signal = self.generate_signal_by_type(signal_type, amplitude, start_time, duration)
         self.current_signal_data = signal
-
-        self.plot_signal_and_histogram(t, signal, signal_type, TIME_AXIS, is_complex = False)
-
+        
+        self.plot_signal_and_histogram(t, signal, signal_type, TIME_AXIS)
+        
         params = SignalGenerator.calculate_signal_parameters(signal)
         param_text = '\n'.join([f'{k}: {v:.4f}' for k, v in params.items()])
         self.parameters_text.setText(param_text)
@@ -418,33 +418,25 @@ class DSPApplication(QMainWindow):
         self.signal_figure.tight_layout()
         self.signal_canvas.draw()
 
-    def plot_signal_and_histogram(self, t, signal, signal_type, x_axis_label=TIME_AXIS, is_complex=False):
+    def plot_signal_and_histogram(self, t, signal, signal_type, x_axis_label=TIME_AXIS):
         self.clear_all_plot_parameters()
 
         self.signal_ax.set_facecolor('#f0f0f0')
         self.signal_ax.grid(True, color='white', linestyle='-', alpha=0.3)
+        
         self.signal_ax.axhline(y=0, color='purple', linestyle='--', alpha=0.3)
         self.signal_ax.axvline(x=0, color='purple', linestyle='--', alpha=0.3)
-
-        # --- Plotting complex or real ---
-        if is_complex:
-            self.signal_ax.plot(t, np.abs(signal), color='green', linewidth=0.8)
-            self.signal_ax.set_title(f'|{signal_type}| (Magnitude)')
-            hist_data = np.abs(signal)
+        
+        if signal_type == UNIT_IMPULSE or signal_type == UNIT_NOISE:
+            self.signal_ax.plot(t, signal, 'ro', markersize=3)
         else:
-            if signal_type == UNIT_IMPULSE or signal_type == UNIT_NOISE:
-                self.signal_ax.plot(t, signal, 'ro', markersize=3)
-            else:
-                self.signal_ax.plot(t, signal, color='red', linewidth=0.8)
-            self.signal_ax.set_title(f'{signal_type}')
-            hist_data = signal
-
+            self.signal_ax.plot(t, signal, color='red', linewidth=0.8)
+        self.signal_ax.set_title(f'{signal_type}')
         self.signal_ax.set_xlabel(x_axis_label)
         self.signal_ax.set_ylabel(AMPLITUDE_AXIS)
-
-        # --- Histogram ---
+        
         self.histogram_ax.set_facecolor('#f0f0f0')
-
+        
         histogram_option = self.histogram_combo.currentText()
         if histogram_option == BINS_5:
             bins = 5
@@ -454,10 +446,10 @@ class DSPApplication(QMainWindow):
             bins = 15
         elif histogram_option == BINS_20:
             bins = 20
-        else:
+        else:  # Continuous
             bins = 'auto'
-
-        self.histogram_ax.hist(hist_data, bins=bins, edgecolor='black')
+            
+        self.histogram_ax.hist(signal, bins=bins, edgecolor='black')
         self.histogram_ax.set_title(SIGNAL_HISTOGRAM)
         self.histogram_ax.set_xlabel(AMPLITUDE_AXIS)
         self.histogram_ax.set_ylabel(FREQUENCY_AXIS)
@@ -490,14 +482,8 @@ class DSPApplication(QMainWindow):
             )
             print(metadata);
             # Plot the signal and histogram
-            # Plot the signal and histogram (handle complex if metadata says so)
-            self.plot_signal_and_histogram(
-                time_array,
-                signal_data,
-                filename,
-                TIME_AXIS,
-                is_complex=metadata.get('is_complex', False)
-            )
+            self.plot_signal_and_histogram(time_array, signal_data, filename, TIME_AXIS)
+
             # Calculate and display signal parameters
             params = SignalGenerator.calculate_signal_parameters(signal_data)
             param_text = '\n'.join([f'{k}: {v:.4f}' for k, v in params.items()])
