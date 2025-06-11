@@ -18,6 +18,7 @@ from GUI_signal_comparison_dialog import SignalComparisonDialog
 from GUI_signal_filter_dialog import SignalFilterDialog
 from GUI_signal_transformation_dialog import SignalTransformationDialog
 from strings import *
+from GUI_signal_complex_load_dialog import SignalLoadComnplexDialog
 
 class DSPApplication(QMainWindow):
     def __init__(self):
@@ -87,7 +88,10 @@ class DSPApplication(QMainWindow):
         
         load_btn = QPushButton(LOAD_SIGNAL)
         load_btn.clicked.connect(self.load_signal)
-        
+
+        load_complex_btn = QPushButton(LOAD_COMPLEX_SIGNAL)
+        load_complex_btn.clicked.connect(self.load_complex_signal)
+
         operations_btn = QPushButton(SIGNAL_OPERATIONS)
         operations_btn.clicked.connect(self.show_signal_operations)
         
@@ -115,6 +119,7 @@ class DSPApplication(QMainWindow):
 
         layout.addWidget(save_btn)
         layout.addWidget(load_btn)
+        layout.addWidget(load_complex_btn)
         layout.addWidget(operations_btn)
         layout.addWidget(text_repr_btn)
         layout.addWidget(conversion_btn)
@@ -301,6 +306,10 @@ class DSPApplication(QMainWindow):
 
     def show_signal_transformation(self):
         dialog = SignalTransformationDialog(self)
+        dialog.exec_()
+
+    def load_complex_signal(self):
+        dialog = SignalLoadComnplexDialog(self)
         dialog.exec_()
     def create_unit_noise_parameters(self, layout):
         unit_noise_params_widget = QWidget()
