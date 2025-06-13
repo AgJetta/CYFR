@@ -149,7 +149,5 @@ PERFORM_TRANSFORMATION = 'Wykonaj Transformację'
 CHOOSE_TRANSFORMATION_METHOD = 'Wybierz metode transformacji'
 
 LOAD_COMPLEX_SIGNAL = 'Wczytaj zespolony sygnał'
-W1 = 'Wykres: część rzeczywista + część urojona'
-W2 = 'Wykres: moduł liczby zespoklonej + argument w funkcji częstotliwości'
-CHOOSE_DIAGRAM_TYPE = 'Wybierz rodzaj wykresu'
+CHOOSE_DIAGRAM_TYPE = 'Synał zespolony - rodzaj wykresu'
 SHOW_COMPLEX_SIGNAL = 'Wyświetl zespolony sygnał'

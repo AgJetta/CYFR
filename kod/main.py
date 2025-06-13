@@ -50,12 +50,19 @@ class DSPApplication(QMainWindow):
     def create_left_panel(self):
         left_panel = QWidget()
         left_layout = QVBoxLayout()
-        
+
         self.add_operation_buttons(left_layout)
         self.add_signal_type_selection(left_layout)
         self.add_parameter_widgets(left_layout)
         self.add_generate_button(left_layout)
-        
+
+        # Complex signal plot mode switcher
+        self.complex_plot_mode_combo = QComboBox()
+        self.complex_plot_mode_combo.addItems(["W1: Rzeczywista/Zespolona", "W2: Moduł/Faza"])
+        self.complex_plot_mode_combo.currentIndexChanged.connect(self.update_complex_plot)
+        left_layout.addWidget(QLabel(SHOW_COMPLEX_SIGNAL))
+        left_layout.addWidget(self.complex_plot_mode_combo)
+
         left_panel.setLayout(left_layout)
         return left_panel
 
@@ -308,9 +315,6 @@ class DSPApplication(QMainWindow):
         dialog = SignalTransformationDialog(self)
         dialog.exec_()
 
-    def load_complex_signal(self):
-        dialog = SignalLoadComnplexDialog(self)
-        dialog.exec_()
     def create_unit_noise_parameters(self, layout):
         unit_noise_params_widget = QWidget()
         unit_noise_params_layout = QGridLayout()
@@ -505,6 +509,88 @@ class DSPApplication(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
+    def update_complex_plot(self):
+        if self.current_signal_data is not None and np.iscomplexobj(self.current_signal_data):
+            n = len(self.current_signal_data)
+            freq = np.fft.fftfreq(n, d=1.0 / self.current_signal_metadata['sampling_freq'])
+            self.plot_complex_signal(freq, self.current_signal_data, "Complex Signal")
+
+
+    def plot_complex_signal(self, freq, complex_data, mode_label):
+        self.clear_all_plot_parameters()
+
+        # Set up axes
+        self.signal_ax.set_facecolor('#f0f0f0')
+        self.signal_ax.grid(True, linestyle='--', alpha=0.3)
+        self.histogram_ax.set_facecolor('#f0f0f0')
+        self.histogram_ax.grid(True, linestyle='--', alpha=0.3)
+
+        mode = self.complex_plot_mode_combo.currentText()
+
+        if mode.startswith("W1"):  # Część rzeczywista / Część urojona
+            self.signal_ax.plot(freq, complex_data.real, label='Część rzeczywista', color='blue')
+            self.histogram_ax.plot(freq, complex_data.imag, label='Część urojona', color='green')
+            self.signal_ax.set_ylabel("Amplituda części rzeczywistej")
+            self.histogram_ax.set_ylabel("Amplituda części urojonej")
+            self.signal_ax.set_title("Część rzeczywista")
+            self.histogram_ax.set_title("Część urojona")
+        else:  # Moduł / Faza
+            magnitude = np.abs(complex_data)
+            phase = np.angle(complex_data)
+            self.signal_ax.plot(freq, magnitude, label='Moduł', color='orange')
+            self.histogram_ax.plot(freq, phase, label='Faza', color='purple')
+            self.signal_ax.set_ylabel("Moduł")
+            self.histogram_ax.set_ylabel("Faza [rad]")
+            self.signal_ax.set_title("Moduł")
+            self.histogram_ax.set_title("Faza")
+
+        self.signal_ax.set_xlabel("Częstotliwość [Hz]")
+        self.histogram_ax.set_xlabel("Częstotliwość [Hz]")
+
+        self.signal_ax.legend()
+        self.histogram_ax.legend()
+        self.signal_figure.tight_layout()
+        self.signal_canvas.draw()
+
+    def generate_complex_signal_from_file(self, filename):
+        try:
+            metadata, complex_data = SignalFileHandler.load_signal(filename)
+
+            self.current_signal_data = complex_data
+            self.current_signal_metadata = metadata
+
+            if SAMPLE_RATE in self.common_parameter_inputs:
+                self.common_parameter_inputs[SAMPLE_RATE].setValue(metadata['sampling_freq'])
+            if START_TIME in self.common_parameter_inputs:
+                self.common_parameter_inputs[START_TIME].setValue(metadata['start_time'])
+            if DURATION in self.common_parameter_inputs:
+                self.common_parameter_inputs[DURATION].setValue(metadata['duration'])
+
+            self.signal_ax.clear()
+            self.histogram_ax.clear()
+
+            # Calculate frequency axis from FFT length and sampling rate
+            n = len(complex_data)
+            freq = np.fft.fftfreq(n, d=1.0 / metadata['sampling_freq'])
+
+            self.plot_complex_signal(freq, complex_data, filename)
+
+            # Display metadata in readable form
+            metadata_text = (
+                f"Sygnał zespolony został wczytany z pliku:\n"
+                f"{filename}\n\n"
+                f"Parametry sygnału:\n"
+                f"Częstotliwość próbkowania: {metadata['sampling_freq']} Hz\n"
+                f"Czas początkowy: {metadata['start_time']} s\n"
+                f"Czas trwania: {metadata['duration']} s\n"
+                f"Liczba próbek: {len(complex_data)}\n\n"
+                f"Przełącz tryb wizualizacji między W1 (rzeczywista/urojona) i W2 (moduł/faza)."
+            )
+
+            self.parameters_text.setText(metadata_text)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
     def show_signal_operations(self):
         dialog = SignalOperationDialog(self)
@@ -624,6 +710,11 @@ class DSPApplication(QMainWindow):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Signal File", "", "Binary Files (*.bin)")
         if filename:
             self.generate_signal_from_file(filename)
+
+    def load_complex_signal(self):
+        filename, _ = QFileDialog.getOpenFileName(self, "Open Signal File", "", "Binary Files (*.bin)")
+        if filename:
+            self.generate_complex_signal_from_file(filename)
 
 def main():
     app = QApplication(sys.argv)

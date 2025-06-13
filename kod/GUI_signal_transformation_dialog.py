@@ -126,29 +126,33 @@ class SignalTransformationDialog(QDialog):
     @staticmethod
     def load_signal(filename):
         with open(filename, 'rb') as f:
-            # Read metadata length (4 bytes = unsigned int)
+            # Read and unpack the metadata length
             metadata_len = struct.unpack('I', f.read(4))[0]
 
-            # Read metadata as JSON
+            # Read and decode metadata
             metadata_json = f.read(metadata_len).decode('utf-8')
             metadata = json.loads(metadata_json)
 
-            num_samples = metadata.get("num_samples", 0)
-            is_complex = metadata.get("is_complex", False)
-
-            if is_complex:
-                # Each complex sample = 16 bytes (2 doubles: real + imag)
-                total_bytes = num_samples * 16
-                raw = f.read(total_bytes)
-                data = struct.unpack(f'{num_samples * 2}d', raw)  # unpack to flat list of doubles
-                signal_data = np.array(data[::2]) + 1j * np.array(data[1::2])
+            # Load the signal data based on whether it is complex or real
+            signal_data = []
+            if metadata['is_complex']:
+                # Load complex signal (pairs of floats: real and imaginary parts)
+                while True:
+                    value_bytes = f.read(16)  # 16 bytes for two doubles (real + imaginary)
+                    if not value_bytes:
+                        break
+                    real, imag = struct.unpack('dd', value_bytes)
+                    signal_data.append(complex(real, imag))  # Create a complex number
             else:
-                # Each real sample = 8 bytes (1 double)
-                total_bytes = num_samples * 8
-                raw = f.read(total_bytes)
-                signal_data = np.array(struct.unpack(f'{num_samples}d', raw))
+                # Load real signal (single double precision float)
+                while True:
+                    value_bytes = f.read(8)  # 8 bytes for one double
+                    if not value_bytes:
+                        break
+                    signal_data.append(struct.unpack('d', value_bytes)[0])
 
-            return metadata, signal_data
+            # Return both metadata (including duration) and signal data
+            return metadata, np.array(signal_data)
 
 
     def perform_transformation(self):
