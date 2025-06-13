@@ -123,36 +123,25 @@ class SignalTransformationDialog(QDialog):
                 metadata[key] = value
         return metadata
 
-    @staticmethod
-    def load_signal(filename):
-        with open(filename, 'rb') as f:
-            # Read and unpack the metadata length
-            metadata_len = struct.unpack('I', f.read(4))[0]
+    def load_signal(self, path_input):
+        filename, _ = QFileDialog.getOpenFileName(self, LOAD_SIGNAL, "", "Binary Files (*.bin)")
+        if filename:
+            path_input.setText(filename)
 
-            # Read and decode metadata
-            metadata_json = f.read(metadata_len).decode('utf-8')
-            metadata = json.loads(metadata_json)
+            try:
+                metadata, signal_data = SignalFileHandler.load_signal(filename)
+                params_text = f"{METADATA_LABEL}\n"
+                for key, value in metadata.items():
+                    params_text += f"{key}: {value}\n"
 
-            # Load the signal data based on whether it is complex or real
-            signal_data = []
-            if metadata['is_complex']:
-                # Load complex signal (pairs of floats: real and imaginary parts)
-                while True:
-                    value_bytes = f.read(16)  # 16 bytes for two doubles (real + imaginary)
-                    if not value_bytes:
-                        break
-                    real, imag = struct.unpack('dd', value_bytes)
-                    signal_data.append(complex(real, imag))  # Create a complex number
-            else:
-                # Load real signal (single double precision float)
-                while True:
-                    value_bytes = f.read(8)  # 8 bytes for one double
-                    if not value_bytes:
-                        break
-                    signal_data.append(struct.unpack('d', value_bytes)[0])
-
-            # Return both metadata (including duration) and signal data
-            return metadata, np.array(signal_data)
+                if path_input == self.signal1_path:
+                    self.signal1_params.setText(params_text)
+                    self.signal1_data = signal_data
+                    # For debugging purposes, you can print out the signal data
+                    # print(f"PARAMETRY: ", params_text)
+                    # print(f"SIGNAL: ", signal_data)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
 
     def perform_transformation(self):
