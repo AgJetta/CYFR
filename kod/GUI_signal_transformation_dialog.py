@@ -1,6 +1,6 @@
 import json
 import struct
-
+import time
 import numpy as np
 from logic_signal_file_handler import SignalFileHandler
 from strings import *
@@ -143,10 +143,11 @@ class SignalTransformationDialog(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_LOADING.format(str(e)))
 
+    import time
 
     def perform_transformation(self):
         if self.signal1_data is None:
-            QMessageBox.critical(self, "Error", ERROR_LOADING)
+            QMessageBox.critical(self, "Błąd", ERROR_LOADING)
             return
 
         try:
@@ -157,25 +158,25 @@ class SignalTransformationDialog(QDialog):
             if self.fourier_radio.isChecked():
                 selected_op = self.fourier_button_group.checkedButton()
                 if not selected_op:
-                    QMessageBox.critical(self, "Error", ERROR_SELECT_OPERATION)
+                    QMessageBox.critical(self, "Błąd", ERROR_SELECT_OPERATION)
                     return
                 operation = selected_op.text()  # e.g., "DIF FFT"
 
             elif self.wavelet_radio.isChecked():
                 operation = self.wavelet_combo.currentText()  # e.g., "DB4"
             else:
-                QMessageBox.critical(self, "Error", ERROR_SELECT_OPERATION)
+                QMessageBox.critical(self, "Błąd", ERROR_SELECT_OPERATION)
                 return
 
-            # print("OPERATION")
-            # print(operation)
-
-            # Perform transformation
+            # --- Measure transformation time ---
+            start_time = time.perf_counter()
             result_signal, result_metadata = SignalFileHandler.perform_signal_transformation(
                 self.signal1_data, metadata_dict, operation
             )
+            end_time = time.perf_counter()
+            duration_ms = (end_time - start_time) * 1000  # milliseconds
 
-            save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
+            save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Pliki binarne (*.bin)")
             if save_filename:
                 SignalFileHandler.save_signal(save_filename, result_signal, metadata=result_metadata)
 
@@ -184,8 +185,15 @@ class SignalTransformationDialog(QDialog):
                 else:
                     self.parent().generate_signal_from_file(save_filename)
 
+                # Show info message with execution time
+                QMessageBox.information(
+                    self,
+                    "Zakończono",
+                    f"Transformacja '{operation}' zakończona pomyślnie.\nCzas wykonania: {duration_ms:.2f} ms"
+                )
+
                 self.close()
 
-
         except Exception as e:
-            QMessageBox.critical(self, "Error", ERROR_OPERATION_FAILED.format(str(e)))
+            QMessageBox.critical(self, "Błąd", ERROR_OPERATION_FAILED.format(str(e)))
+
