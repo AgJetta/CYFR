@@ -705,16 +705,27 @@ class DSPApplication(QMainWindow):
                 QMessageBox.information(self, "Success", SIGNAL_SAVED)
             except Exception as e:
                 QMessageBox.critical(self, "Error", ERROR_SAVING.format(str(e)))
-    
+
     def load_signal(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Open Signal File", "", "Binary Files (*.bin)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Otwórz plik sygnału", "", "Pliki binarne (*.bin)")
         if filename:
-            self.generate_signal_from_file(filename)
+            metadata, _ = SignalFileHandler.load_signal(filename)
+            if metadata.get('is_complex', False):
+                QMessageBox.critical(self, "Błąd",
+                                     "Wybrany plik zawiera sygnał zespolony. Użyj opcji 'Wczytaj sygnał zespolony'.")
+            else:
+                self.generate_signal_from_file(filename)
 
     def load_complex_signal(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Open Signal File", "", "Binary Files (*.bin)")
+        filename, _ = QFileDialog.getOpenFileName(self, "Otwórz plik sygnału", "", "Pliki binarne (*.bin)")
         if filename:
-            self.generate_complex_signal_from_file(filename)
+            metadata, _ = SignalFileHandler.load_signal(filename)
+            if not metadata.get('is_complex', False):
+                QMessageBox.critical(self, "Błąd",
+                                     "Wybrany plik zawiera sygnał rzeczywisty. Użyj opcji 'Wczytaj sygnał'.")
+            else:
+                self.generate_complex_signal_from_file(filename)
+
 
 def main():
     app = QApplication(sys.argv)

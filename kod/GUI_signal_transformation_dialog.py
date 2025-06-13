@@ -178,8 +178,14 @@ class SignalTransformationDialog(QDialog):
             save_filename, _ = QFileDialog.getSaveFileName(self, SAVE_RESULT, "", "Binary Files (*.bin)")
             if save_filename:
                 SignalFileHandler.save_signal(save_filename, result_signal, metadata=result_metadata)
-                self.parent().generate_signal_from_file(save_filename)
+
+                if np.iscomplexobj(result_signal):
+                    self.parent().generate_complex_signal_from_file(save_filename)
+                else:
+                    self.parent().generate_signal_from_file(save_filename)
+
                 self.close()
+
 
         except Exception as e:
             QMessageBox.critical(self, "Error", ERROR_OPERATION_FAILED.format(str(e)))

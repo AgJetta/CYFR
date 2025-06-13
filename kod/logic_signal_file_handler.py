@@ -273,6 +273,7 @@ class SignalFileHandler:
             return perform_wavelet_transform(signal, metadata, "db4")
         elif operation == "DB6":
             return perform_wavelet_transform(signal, metadata, "db6")
-        # Add more as needed
+        elif operation == "DB8":
+            return perform_wavelet_transform(signal, metadata, "db8")
         else:
             raise ValueError(f"Unsupported transformation operation: {operation}")
